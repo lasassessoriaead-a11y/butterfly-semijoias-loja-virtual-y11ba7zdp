@@ -7,8 +7,7 @@ import { useStore } from '@/contexts/StoreContext'
 import { formatCurrency, type Product } from '@/types/store'
 
 export function ProductCard({ product }: { product: Product }) {
-  const { buyNow, checkoutBaseUrl } = useStore()
-  const hasCheckout = Boolean(product.checkoutUrl || checkoutBaseUrl)
+  const { buyNow } = useStore()
 
   return (
     <Card className="product-card group overflow-hidden border-0 bg-white shadow-none">
@@ -42,21 +41,17 @@ export function ProductCard({ product }: { product: Product }) {
         </Link>
         <p className="mt-2 font-medium text-emerald-deep">{formatCurrency(product.price_cents)}</p>
         <div className="mt-3 flex items-center justify-between gap-2">
-          {hasCheckout ? (
-            <Button
-              type="button"
-              size="sm"
-              className="h-8 px-3 text-xs bg-emerald-deep text-white hover:bg-emerald-900"
-              onClick={(e) => {
-                e.preventDefault()
-                buyNow(product)
-              }}
-            >
-              Adicionar à sacola
-            </Button>
-          ) : (
-            <span className="text-xs text-muted-foreground">Catálogo ao vivo</span>
-          )}
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 px-3 text-xs bg-emerald-deep text-white hover:bg-emerald-900 shadow-sm"
+            onClick={(e) => {
+              e.preventDefault()
+              buyNow(product)
+            }}
+          >
+            Adicionar à sacola
+          </Button>
           <Button
             asChild
             variant="ghost"

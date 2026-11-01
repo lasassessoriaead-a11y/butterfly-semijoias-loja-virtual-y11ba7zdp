@@ -51,23 +51,24 @@ export const storeApi = {
     quantity = 1,
     gestaoCheckoutBase?: string,
   ): string {
-    const base = product.checkoutUrl || gestaoCheckoutBase || ''
+    const DEFAULT_GESTAO_CHECKOUT =
+      'https://butterfly-semijoias-gestao.luka251083739205.chatgpt.site/checkout'
+    const base = product.checkoutUrl || gestaoCheckoutBase || DEFAULT_GESTAO_CHECKOUT
     if (!base) return ''
     try {
       const url = new URL(base, window.location.origin)
-      url.searchParams.set('sku', product.sku)
-      url.searchParams.set('productId', product.id)
+      if (product.sku) url.searchParams.set('sku', product.sku)
+      if (product.id) url.searchParams.set('productId', product.id)
       url.searchParams.set('source', 'skip')
       if (variation) url.searchParams.set('variation', variation)
       if (quantity > 1) url.searchParams.set('quantity', String(quantity))
       return url.toString()
     } catch {
       const sep = base.includes('?') ? '&' : '?'
-      const params = new URLSearchParams({
-        sku: product.sku,
-        productId: product.id,
-        source: 'skip',
-      })
+      const params = new URLSearchParams()
+      if (product.sku) params.set('sku', product.sku)
+      if (product.id) params.set('productId', product.id)
+      params.set('source', 'skip')
       if (variation) params.set('variation', variation)
       if (quantity > 1) params.set('quantity', String(quantity))
       return `${base}${sep}${params.toString()}`

@@ -145,9 +145,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const url = storeApi.buildCheckoutUrl(product, variation, quantity, checkoutBaseUrl)
     if (url) {
       window.location.href = url
-    } else {
-      // Fallback gracioso se a URL do checkout ainda não estiver definida
-      addToCart(product, variation || product.variations[0] || 'Dourado', quantity)
     }
   }
 

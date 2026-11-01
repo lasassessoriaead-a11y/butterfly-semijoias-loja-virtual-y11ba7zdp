@@ -1,14 +1,21 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, MapPin, Package, ShieldCheck, UserRound } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import {
+  ExternalLink,
+  LogOut,
+  MapPin,
+  Package,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useStore } from '@/contexts/StoreContext'
 import { useToast } from '@/hooks/use-toast'
 import { CenteredLoader } from '@/components/LoadingState'
 import { readableError, storeApi } from '@/services/store'
+import { GESTAO_ACCOUNT_URL, GESTAO_RESELLER_URL } from '@/components/Layout'
 import { formatCurrency, type Address, type OrderRecord } from '@/types/store'
 
 const statusLabel: Record<string, string> = {
@@ -22,16 +29,11 @@ const statusLabel: Record<string, string> = {
 }
 
 export default function AccountPage() {
-  const { user, authReady, isAdmin, login, register, logout } = useStore()
+  const { user, authReady, isAdmin, logout } = useStore()
   const { toast } = useToast()
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [mode, setMode] = useState<'login' | 'register'>('login')
-  const [submitting, setSubmitting] = useState(false)
   const [orders, setOrders] = useState<OrderRecord[]>([])
   const [addresses, setAddresses] = useState<Address[]>([])
   const [loadingData, setLoadingData] = useState(false)
-  const [form, setForm] = useState({ name: '', phone: '', email: '', password: '' })
 
   const loadAccount = async () => {
     setLoadingData(true)
@@ -57,29 +59,6 @@ export default function AccountPage() {
     if (user) void loadAccount()
   }, [user?.id])
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
-    setSubmitting(true)
-    try {
-      if (mode === 'login') await login(form.email, form.password)
-      else await register(form)
-      toast({
-        title: mode === 'login' ? 'Bem-vinda de volta' : 'Conta criada',
-        description: 'Você já pode acompanhar pedidos e endereços.',
-      })
-      const returnTo = new URLSearchParams(location.search).get('retorno')
-      if (returnTo?.startsWith('/')) navigate(returnTo)
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: mode === 'login' ? 'Não foi possível entrar' : 'Não foi possível criar a conta',
-        description: readableError(error),
-      })
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
   if (!authReady) return <CenteredLoader label="Verificando sua conta..." />
 
   if (!user)
@@ -87,100 +66,61 @@ export default function AccountPage() {
       <div className="account-auth">
         <div className="account-auth__visual">
           <div className="relative z-10 max-w-md p-8 text-white md:p-12">
-            <p className="eyebrow text-gold">Minha Butterfly</p>
+            <p className="eyebrow text-gold">Butterfly Gestão</p>
             <h1 className="font-serif text-5xl leading-tight">
-              Seu espaço para acompanhar cada escolha.
+              Acesso centralizado de clientes e revendedoras.
             </h1>
             <p className="mt-5 leading-8 text-white/70">
-              Cadastre-se para registrar pedidos, salvar endereços e acompanhar o status com
-              segurança.
+              O cadastro, login e recuperação de senha oficiais são realizados diretamente no portal
+              do Butterfly Gestão.
             </p>
           </div>
         </div>
         <div className="flex items-center justify-center bg-white px-5 py-16">
-          <div className="w-full max-w-md">
-            <div className="mb-8 flex rounded-md bg-ivory p-1">
-              <button
-                className={`flex-1 rounded px-4 py-2 text-sm font-medium ${mode === 'login' ? 'bg-white text-emerald-deep shadow-sm' : 'text-muted-foreground'}`}
-                onClick={() => setMode('login')}
-              >
-                Entrar
-              </button>
-              <button
-                className={`flex-1 rounded px-4 py-2 text-sm font-medium ${mode === 'register' ? 'bg-white text-emerald-deep shadow-sm' : 'text-muted-foreground'}`}
-                onClick={() => setMode('register')}
-              >
-                Criar conta
-              </button>
-            </div>
-            <h2 className="font-serif text-3xl text-emerald-deep">
-              {mode === 'login' ? 'Acesse sua conta' : 'Comece por aqui'}
+          <div className="w-full max-w-md text-center sm:text-left">
+            <span className="eyebrow text-gold-deep">Portal oficial</span>
+            <h2 className="mt-2 font-serif text-3xl text-emerald-deep">
+              Acesse sua conta Butterfly
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {mode === 'login'
-                ? 'Use seu e-mail e senha cadastrados.'
-                : 'Seus dados ficam protegidos e são usados apenas para operar a loja.'}
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              O acesso de clientes e revendedoras está publicado e centralizado no Butterfly Gestão.
+              Não é necessário criar um cadastro paralelo nesta vitrine.
             </p>
-            <form onSubmit={handleSubmit} className="mt-7 grid gap-4">
-              {mode === 'register' && (
-                <>
-                  <div>
-                    <Label htmlFor="account-name">Nome completo</Label>
-                    <Input
-                      id="account-name"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      required
-                      minLength={3}
-                      className="mt-2 h-12"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="account-phone">Telefone</Label>
-                    <Input
-                      id="account-phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="mt-2 h-12"
-                    />
-                  </div>
-                </>
-              )}
-              <div>
-                <Label htmlFor="account-email">E-mail</Label>
-                <Input
-                  id="account-email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                  className="mt-2 h-12"
-                />
-              </div>
-              <div>
-                <Label htmlFor="account-password">Senha</Label>
-                <Input
-                  id="account-password"
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                  minLength={8}
-                  className="mt-2 h-12"
-                />
-              </div>
-              <Button type="submit" size="lg" disabled={submitting} className="mt-2">
-                {submitting ? 'Aguarde...' : mode === 'login' ? 'Entrar' : 'Criar minha conta'}
+
+            <div className="mt-8 grid gap-3">
+              <Button
+                asChild
+                size="lg"
+                className="w-full bg-emerald-deep text-white hover:bg-emerald-900 h-13"
+              >
+                <a href={GESTAO_ACCOUNT_URL} target="_blank" rel="noopener noreferrer">
+                  <UserRound className="mr-2 size-5" /> Acessar Minha Conta no Gestão
+                  <ExternalLink className="ml-auto size-4" />
+                </a>
               </Button>
-              <p className="text-center text-xs leading-5 text-muted-foreground">
-                Ao criar uma conta, você concorda com a{' '}
-                <Link to="/politicas" className="underline">
-                  Política de Privacidade
-                </Link>
-                .
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="w-full border-gold/50 bg-gold/5 text-emerald-deep hover:bg-gold/15 h-13"
+              >
+                <a href={GESTAO_RESELLER_URL} target="_blank" rel="noopener noreferrer">
+                  <Sparkles className="mr-2 size-5 text-gold-deep" /> Área da Revendedora (Gestão)
+                  <ExternalLink className="ml-auto size-4" />
+                </a>
+              </Button>
+              <Button asChild variant="ghost" className="mt-2">
+                <Link to="/loja">Voltar à loja virtual</Link>
+              </Button>
+            </div>
+
+            <div className="mt-10 rounded-sm border border-emerald-900/10 bg-ivory p-4 text-xs leading-5 text-muted-foreground text-left">
+              <p>
+                <strong>Equipe interna ou suporte:</strong> caso precise acessar a área
+                administrativa local deste ambiente de teste, utilize as credenciais administrativas
+                configuradas.
               </p>
-            </form>
+            </div>
           </div>
         </div>
       </div>

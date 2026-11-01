@@ -1,18 +1,33 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Instagram, LockKeyhole, Menu, Search, ShieldCheck, UserRound, X } from 'lucide-react'
+import {
+  ExternalLink,
+  Instagram,
+  LockKeyhole,
+  Menu,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+  X,
+} from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useStore } from '@/contexts/StoreContext'
 import { cn } from '@/lib/utils'
 
+export const GESTAO_ACCOUNT_URL =
+  'https://butterfly-semijoias-gestao.luka251083739205.chatgpt.site/conta'
+export const GESTAO_RESELLER_URL =
+  'https://butterfly-semijoias-gestao.luka251083739205.chatgpt.site/conta?returnTo=%2Fvendedora'
+
 const mainLinks = [
   ['Início', '/'],
   ['Loja', '/loja'],
   ['Lançamentos', '/lancamentos'],
   ['Mais vendidos', '/mais-vendidos'],
-  ['Revendedora', '/revendedora'],
+  ['Seja revendedora', '/revendedora'],
   ['Sobre', '/sobre'],
   ['Contato', '/contato'],
 ]
@@ -87,13 +102,34 @@ export function Layout() {
               <div className="px-6 py-5">
                 <NavigationLinks mobile onNavigate={() => setMenuOpen(false)} />
                 <div className="mt-6 grid gap-2">
-                  <Button asChild variant="outline">
-                    <Link to="/conta" onClick={() => setMenuOpen(false)}>
-                      <UserRound className="mr-2 size-4" /> Minha conta
-                    </Link>
+                  <Button asChild variant="outline" className="justify-start">
+                    <a
+                      href={GESTAO_ACCOUNT_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <UserRound className="mr-2 size-4 text-emerald-deep" /> Minha conta
+                      <ExternalLink className="ml-auto size-3.5 text-muted-foreground" />
+                    </a>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="justify-start border-gold/40 bg-gold/5 text-emerald-deep hover:bg-gold/10"
+                  >
+                    <a
+                      href={GESTAO_RESELLER_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Sparkles className="mr-2 size-4 text-gold-deep" /> Área da revendedora
+                      <ExternalLink className="ml-auto size-3.5 text-muted-foreground" />
+                    </a>
                   </Button>
                   {isAdmin && (
-                    <Button asChild>
+                    <Button asChild className="justify-start">
                       <Link to="/admin" onClick={() => setMenuOpen(false)}>
                         <ShieldCheck className="mr-2 size-4" /> Administração
                       </Link>
@@ -114,7 +150,7 @@ export function Layout() {
 
           <NavigationLinks />
 
-          <div className="flex items-center gap-0.5 md:gap-1">
+          <div className="flex items-center gap-1 md:gap-2">
             <Button
               variant="ghost"
               size="icon"
@@ -126,12 +162,45 @@ export function Layout() {
             <Button
               asChild
               variant="ghost"
-              size="icon"
-              aria-label={user ? `Conta de ${user.name}` : 'Minha conta'}
+              size="sm"
+              className="hidden lg:inline-flex text-xs text-emerald-deep hover:text-gold-deep"
+              title="Área da revendedora Butterfly Gestão"
             >
-              <Link to="/conta">
+              <a href={GESTAO_RESELLER_URL} target="_blank" rel="noopener noreferrer">
+                <Sparkles className="mr-1.5 size-3.5 text-gold-deep" /> Área da revendedora
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex text-xs text-emerald-deep hover:text-gold-deep"
+              title="Minha conta Butterfly Gestão"
+            >
+              <a
+                href={GESTAO_ACCOUNT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Minha conta"
+              >
+                <UserRound className="mr-1.5 size-4" /> Minha conta
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="sm:hidden"
+              aria-label="Minha conta"
+            >
+              <a
+                href={GESTAO_ACCOUNT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Minha conta"
+              >
                 <UserRound className="size-5" />
-              </Link>
+              </a>
             </Button>
           </div>
         </div>
@@ -179,7 +248,22 @@ export function Layout() {
             <h3 className="footer-title">Atendimento</h3>
             <div className="footer-links">
               <Link to="/contato">Fale conosco</Link>
-              <Link to="/conta">Minha conta</Link>
+              <a
+                href={GESTAO_ACCOUNT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5"
+              >
+                Minha conta <ExternalLink className="size-3 text-white/50" />
+              </a>
+              <a
+                href={GESTAO_RESELLER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-gold-light hover:text-white"
+              >
+                Área da revendedora <ExternalLink className="size-3 text-gold-light/60" />
+              </a>
               <Link to="/politicas#entregas">Entregas</Link>
               <Link to="/politicas#trocas">Trocas e devoluções</Link>
             </div>
