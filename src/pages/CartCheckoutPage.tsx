@@ -76,7 +76,9 @@ export default function CartCheckoutPage() {
   }, [user])
 
   useEffect(() => {
-    if (!order?.pixCopyPaste) return
+    if (!order?.pixCopyPaste) {
+      return
+    }
     QRCode.toDataURL(order.pixCopyPaste, {
       width: 560,
       margin: 3,
