@@ -1,0 +1,740 @@
+{
+  "generatedAt": "2026-11-01T14:59:28.217Z",
+  "collections": [
+    {
+      "name": "users",
+      "type": "auth",
+      "apiRules": {
+        "list": "id = @request.auth.id || @request.auth.role = 'admin'",
+        "view": "id = @request.auth.id || @request.auth.role = 'admin'",
+        "create": "@request.body.role = '' || @request.body.role = 'customer'",
+        "update": "id = @request.auth.id && (@request.body.role = '' || @request.body.role = @request.auth.role)",
+        "delete": "id = @request.auth.id && @request.auth.role != 'admin'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "avatar",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "role",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["customer", "admin"]
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX `idx_tokenKey__pb_users_auth_` ON `users` (`tokenKey`)",
+        "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''"
+      ]
+    },
+    {
+      "name": "products",
+      "type": "base",
+      "apiRules": {
+        "list": "available = true || @request.auth.role = 'admin'",
+        "view": "available = true || @request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "sku",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "external_id",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "editor",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "category",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["brincos", "colares", "pulseiras", "aneis", "conjuntos", "outras"]
+        },
+        {
+          "name": "price_cents",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "compare_price_cents",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "variations",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "image_url",
+          "type": "url",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "image_alt",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "image_is_provisional",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "stock",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "available",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "featured",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_new",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "best_seller",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "source",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["provisional", "butterfly_gestao"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_products_sku ON products (sku)",
+        "CREATE UNIQUE INDEX idx_products_slug ON products (slug)",
+        "CREATE INDEX idx_products_category_available ON products (category, available)",
+        "CREATE INDEX idx_products_featured ON products (featured, is_new, best_seller)"
+      ]
+    },
+    {
+      "name": "addresses",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && user = @request.auth.id",
+        "view": "@request.auth.id != '' && user = @request.auth.id",
+        "create": "@request.auth.id != '' && @request.body.user = @request.auth.id",
+        "update": "@request.auth.id != '' && user = @request.auth.id && (@request.body.user = '' || @request.body.user = @request.auth.id)",
+        "delete": "@request.auth.id != '' && user = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "user",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "recipient",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "postal_code",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "street",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "number",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "complement",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "neighborhood",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "is_default",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_addresses_user ON addresses (user)"]
+    },
+    {
+      "name": "orders",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (customer = @request.auth.id || @request.auth.role = 'admin')",
+        "view": "@request.auth.id != '' && (customer = @request.auth.id || @request.auth.role = 'admin')",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "order_number",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "client_request_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "customer",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "items",
+          "type": "json",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "shipping_address",
+          "type": "json",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "subtotal_cents",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "shipping_cents",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_cents",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "shipping_label",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "shipping_provisional",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "awaiting_payment",
+            "paid",
+            "preparing",
+            "shipped",
+            "delivered",
+            "cancelled",
+            "expired"
+          ]
+        },
+        {
+          "name": "payment_status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["awaiting", "paid", "expired", "cancelled"]
+        },
+        {
+          "name": "payment_method",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["pix"]
+        },
+        {
+          "name": "pix_mode",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["test_placeholder", "woovi_test", "live"]
+        },
+        {
+          "name": "pix_correlation_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "pix_copy_paste",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "woovi_charge_id",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "webhook_confirmed",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "paid_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "external_sync_status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["pending", "synced", "error"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_orders_number ON orders (order_number)",
+        "CREATE UNIQUE INDEX idx_orders_client_request ON orders (client_request_id)",
+        "CREATE UNIQUE INDEX idx_orders_pix_correlation ON orders (pix_correlation_id)",
+        "CREATE INDEX idx_orders_customer_created ON orders (customer, created DESC)",
+        "CREATE INDEX idx_orders_status_created ON orders (status, created DESC)"
+      ]
+    },
+    {
+      "name": "reseller_applications",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": null,
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "whatsapp",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["new", "reviewing", "contacted", "approved", "declined"]
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "external_sync_status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["pending", "synced", "error"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_reseller_status_created ON reseller_applications (status, created DESC)"
+      ]
+    },
+    {
+      "name": "shipping_ranges",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "start_cep",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "end_cep",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "price_cents",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "estimated_days_min",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "estimated_days_max",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "provisional",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_shipping_range ON shipping_ranges (active, start_cep, end_cep)"]
+    },
+    {
+      "name": "store_settings",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "key",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "value",
+          "type": "json",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "sensitive",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_store_settings_key ON store_settings (key)"]
+    },
+    {
+      "name": "webhook_events",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'admin'",
+        "view": "@request.auth.role = 'admin'",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "provider",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["woovi"]
+        },
+        {
+          "name": "event_type",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "idempotency_key",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "correlation_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "signature_valid",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "payload_hash",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_webhook_idempotency ON webhook_events (idempotency_key)"]
+    }
+  ]
+}
