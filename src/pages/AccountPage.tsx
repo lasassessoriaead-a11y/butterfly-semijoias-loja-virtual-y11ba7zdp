@@ -230,7 +230,12 @@ export default function AccountPage() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="orders" className="mt-6">
-                <h2 className="font-serif text-3xl text-emerald-deep">Histórico de pedidos</h2>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="font-serif text-3xl text-emerald-deep">Histórico de pedidos</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Novas compras são concluídas e acompanhadas diretamente pelo Butterfly Gestão
+                  </p>
+                </div>
                 {orders.length ? (
                   <div className="mt-5 space-y-4">
                     {orders.map((order) => (
@@ -275,7 +280,11 @@ export default function AccountPage() {
                   <div className="mt-5 rounded-sm bg-ivory p-10 text-center">
                     <Package className="mx-auto size-9 text-gold" />
                     <p className="mt-3 text-sm text-muted-foreground">
-                      Você ainda não registrou pedidos.
+                      Você ainda não registrou pedidos anteriores nesta conta.
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Suas novas compras na Butterfly são finalizadas com segurança no checkout do
+                      Butterfly Gestão.
                     </p>
                     <Button asChild className="mt-4">
                       <Link to="/loja">Explorar a loja</Link>

@@ -24,13 +24,236 @@ routerAdd('GET', '/backend/v1/butterfly/v1/shipping/quote', (e) => {
 })
 
 routerAdd('GET', '/backend/v1/butterfly/v1/public-config', (e) => {
+  let baseUrl = $os.getenv('BUTTERFLY_GESTAO_URL') || ''
+  let checkoutUrl = $os.getenv('BUTTERFLY_GESTAO_CHECKOUT_URL') || ''
+
+  try {
+    const records = e.app.findRecordsByFilter(
+      'store_settings',
+      "key = 'butterfly_gestao_integration'",
+      '',
+      1,
+      0,
+    )
+    if (records.length) {
+      const parsed = JSON.parse(records[0].getString('value')) || {}
+      if (!baseUrl && parsed.baseUrl) baseUrl = String(parsed.baseUrl).trim()
+      if (!checkoutUrl && parsed.checkoutUrl) checkoutUrl = String(parsed.checkoutUrl).trim()
+    }
+  } catch (_) {}
+
+  baseUrl = baseUrl.replace(/\/+$/, '')
+  if (!checkoutUrl && baseUrl) {
+    checkoutUrl = baseUrl + '/checkout'
+  }
+
   return e.json(200, {
     publicationEnabled: false,
     storeStatus: 'pre_launch',
-    payments: { provider: 'woovi', mode: 'test_placeholder', realChargesEnabled: false },
-    shipping: { provider: 'provisional_table', realCarrierQuote: false },
-    inventory: { primarySource: 'butterfly_gestao', connected: false, currentData: 'provisional' },
+    payments: { provider: 'butterfly_gestao', mode: 'redirect', realChargesEnabled: false },
+    shipping: { provider: 'butterfly_gestao', realCarrierQuote: false },
+    inventory: {
+      primarySource: 'butterfly_gestao',
+      connected: Boolean(baseUrl),
+      currentData: 'live_gestao',
+    },
+    gestao: {
+      configured: Boolean(baseUrl),
+      checkoutUrl: checkoutUrl || '',
+    },
   })
+})
+
+routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
+  let baseUrl = $os.getenv('BUTTERFLY_GESTAO_URL') || ''
+  let token = $os.getenv('BUTTERFLY_GESTAO_TOKEN') || ''
+  let checkoutUrl = $os.getenv('BUTTERFLY_GESTAO_CHECKOUT_URL') || ''
+
+  try {
+    const records = e.app.findRecordsByFilter(
+      'store_settings',
+      "key = 'butterfly_gestao_integration'",
+      '',
+      1,
+      0,
+    )
+    if (records.length) {
+      const parsed = JSON.parse(records[0].getString('value')) || {}
+      if (!baseUrl && parsed.baseUrl) baseUrl = String(parsed.baseUrl).trim()
+      if (!token && parsed.token) token = String(parsed.token).trim()
+      if (!checkoutUrl && parsed.checkoutUrl) checkoutUrl = String(parsed.checkoutUrl).trim()
+    }
+  } catch (_) {}
+
+  baseUrl = baseUrl.replace(/\/+$/, '')
+  if (!checkoutUrl && baseUrl) {
+    checkoutUrl = baseUrl + '/checkout'
+  }
+  const gestao = { baseUrl: baseUrl, token: token, checkoutUrl: checkoutUrl }
+  if (!gestao.baseUrl) {
+    return e.json(503, {
+      configured: false,
+      error: 'INTEGRATION_UNCONFIGURED',
+      message:
+        'A integração com o Butterfly Gestão aguarda a configuração da URL e do token de acesso.',
+    })
+  }
+
+  const endpoint = gestao.baseUrl + '/api/shop'
+  const headers = { Accept: 'application/json' }
+  if (gestao.token) {
+    headers['Authorization'] = 'Bearer ' + gestao.token
+    headers['X-Gestao-Token'] = gestao.token
+  }
+
+  try {
+    const res = $http.send({
+      url: endpoint,
+      method: 'GET',
+      headers: headers,
+      timeout: 12,
+    })
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      return e.json(502, {
+        configured: true,
+        error: 'GESTAO_API_ERROR',
+        status: res.statusCode,
+        message:
+          'O Butterfly Gestão respondeu com status ' +
+          res.statusCode +
+          '. Catálogo indisponível no momento.',
+      })
+    }
+
+    let payload = res.json
+    if (!payload && res.rawText) {
+      try {
+        payload = JSON.parse(res.rawText)
+      } catch (_) {
+        payload = null
+      }
+    }
+
+    let rawProducts = []
+    let metadata = {}
+    if (Array.isArray(payload)) {
+      rawProducts = payload
+    } else if (payload && typeof payload === 'object') {
+      if (Array.isArray(payload.products)) rawProducts = payload.products
+      else if (Array.isArray(payload.data)) rawProducts = payload.data
+      else if (Array.isArray(payload.items)) rawProducts = payload.items
+      metadata = payload.metadata || payload.meta || {}
+    }
+
+    const normalized = rawProducts.map((p, index) => {
+      const id = String(p.id || p.sku || 'gestao-' + index)
+      const sku = String(p.sku || id)
+      const name = String(p.name || p.title || 'Semijoia Butterfly')
+      const slug = String(
+        p.slug ||
+          sku
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '') ||
+          'item-' + id,
+      )
+      let priceCents = 0
+      if (typeof p.priceCents === 'number') priceCents = p.priceCents
+      else if (typeof p.price_cents === 'number') priceCents = p.price_cents
+      else if (typeof p.price === 'number') priceCents = Math.round(p.price * 100)
+      else if (typeof p.valorCents === 'number') priceCents = p.valorCents
+      else if (typeof p.valor === 'number') priceCents = Math.round(p.valor * 100)
+
+      let comparePriceCents = 0
+      if (typeof p.comparePriceCents === 'number') comparePriceCents = p.comparePriceCents
+      else if (typeof p.compare_price_cents === 'number') comparePriceCents = p.compare_price_cents
+      else if (typeof p.comparePrice === 'number')
+        comparePriceCents = Math.round(p.comparePrice * 100)
+
+      let category = String(p.category || 'outras').toLowerCase()
+      const allowedCategories = ['brincos', 'colares', 'pulseiras', 'aneis', 'conjuntos', 'outras']
+      if (allowedCategories.indexOf(category) === -1) {
+        if (category.indexOf('brinco') !== -1 || category.indexOf('argola') !== -1)
+          category = 'brincos'
+        else if (
+          category.indexOf('colar') !== -1 ||
+          category.indexOf('gargantilha') !== -1 ||
+          category.indexOf('choker') !== -1
+        )
+          category = 'colares'
+        else if (category.indexOf('pulseira') !== -1 || category.indexOf('bracelete') !== -1)
+          category = 'pulseiras'
+        else if (category.indexOf('anel') !== -1 || category.indexOf('aneis') !== -1)
+          category = 'aneis'
+        else if (category.indexOf('conjunto') !== -1) category = 'conjuntos'
+        else category = 'outras'
+      }
+
+      let variations = ['Dourado']
+      if (Array.isArray(p.variations) && p.variations.length) {
+        variations = p.variations.map(function (v) {
+          return typeof v === 'string' ? v : v.name || v.label || v.title || 'Padrão'
+        })
+      } else if (category === 'aneis') {
+        variations = ['Aro 14', 'Aro 16', 'Aro 18', 'Aro 20']
+      }
+
+      const imageUrl = String(
+        p.imageUrl || p.image_url || p.image || (Array.isArray(p.images) && p.images[0]) || '',
+      )
+      const stock = typeof p.stock === 'number' ? p.stock : p.stockQuantity || p.quantity || 0
+      const available = typeof p.available === 'boolean' ? p.available : stock > 0
+
+      return {
+        id: id,
+        sku: sku,
+        external_id: String(p.externalId || p.external_id || id),
+        slug: slug,
+        name: name,
+        description: String(p.description || p.detalhes || ''),
+        category: category,
+        price_cents: Math.max(0, priceCents),
+        compare_price_cents: Math.max(0, comparePriceCents),
+        variations: variations,
+        image_url: imageUrl,
+        image_alt: String(p.imageAlt || p.image_alt || name),
+        image_is_provisional: false,
+        stock: Math.max(0, stock),
+        available: available,
+        featured: Boolean(p.featured || p.destaque),
+        is_new: Boolean(p.isNew || p.is_new || p.lancamento),
+        best_seller: Boolean(p.bestSeller || p.best_seller || p.maisVendido),
+        source: 'butterfly_gestao',
+        checkoutUrl: gestao.checkoutUrl
+          ? gestao.checkoutUrl +
+            '?sku=' +
+            encodeURIComponent(sku) +
+            '&productId=' +
+            encodeURIComponent(id) +
+            '&source=skip'
+          : '',
+      }
+    })
+
+    return e.json(200, {
+      configured: true,
+      source: 'butterfly_gestao',
+      products: normalized,
+      count: normalized.length,
+      checkoutBaseUrl: gestao.checkoutUrl,
+      metadata: metadata,
+    })
+  } catch (err) {
+    return e.json(502, {
+      configured: true,
+      error: 'GESTAO_NETWORK_ERROR',
+      message:
+        'Não foi possível conectar ao Butterfly Gestão (' +
+        String(err) +
+        '). O catálogo ao vivo está temporariamente indisponível.',
+    })
+  }
 })
 
 routerAdd('POST', '/backend/v1/butterfly/v1/reseller-applications', (e) => {

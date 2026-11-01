@@ -4,6 +4,8 @@ import type {
   CartItem,
   CheckoutAddress,
   CheckoutOrder,
+  GestaoPublicConfig,
+  GestaoShopResponse,
   OrderRecord,
   Product,
   ResellerApplication,
@@ -15,11 +17,76 @@ import type {
 
 const normalizeProduct = (product: Product): Product => ({
   ...product,
-  variations: Array.isArray(product.variations) ? product.variations : ['Dourado'],
+  variations:
+    Array.isArray(product.variations) && product.variations.length > 0
+      ? product.variations
+      : ['Dourado'],
 })
 
 export const storeApi = {
-  async listProducts() {
+  async getPublicConfig(): Promise<GestaoPublicConfig> {
+    return pb.send<GestaoPublicConfig>('/backend/v1/butterfly/v1/public-config', {
+      method: 'GET',
+    })
+  },
+
+  async listLiveShop(): Promise<GestaoShopResponse> {
+    const res = await pb.send<GestaoShopResponse>('/backend/v1/butterfly/v1/gestao/shop', {
+      method: 'GET',
+    })
+    return {
+      ...res,
+      products: Array.isArray(res.products) ? res.products.map(normalizeProduct) : [],
+    }
+  },
+
+  async listProducts(): Promise<Product[]> {
+    const response = await storeApi.listLiveShop()
+    return response.products
+  },
+
+  buildCheckoutUrl(
+    product: Product,
+    variation?: string,
+    quantity = 1,
+    gestaoCheckoutBase?: string,
+  ): string {
+    const base = product.checkoutUrl || gestaoCheckoutBase || ''
+    if (!base) return ''
+    try {
+      const url = new URL(base, window.location.origin)
+      url.searchParams.set('sku', product.sku)
+      url.searchParams.set('productId', product.id)
+      url.searchParams.set('source', 'skip')
+      if (variation) url.searchParams.set('variation', variation)
+      if (quantity > 1) url.searchParams.set('quantity', String(quantity))
+      return url.toString()
+    } catch {
+      const sep = base.includes('?') ? '&' : '?'
+      const params = new URLSearchParams({
+        sku: product.sku,
+        productId: product.id,
+        source: 'skip',
+      })
+      if (variation) params.set('variation', variation)
+      if (quantity > 1) params.set('quantity', String(quantity))
+      return `${base}${sep}${params.toString()}`
+    }
+  },
+
+  redirectToCheckout(
+    product: Product,
+    variation?: string,
+    quantity = 1,
+    gestaoCheckoutBase?: string,
+  ) {
+    const url = storeApi.buildCheckoutUrl(product, variation, quantity, gestaoCheckoutBase)
+    if (url) {
+      window.location.href = url
+    }
+  },
+
+  async listLegacyLocalProducts() {
     const records = await pb
       .collection('products')
       .getFullList<Product>({ sort: '-featured,-created' })

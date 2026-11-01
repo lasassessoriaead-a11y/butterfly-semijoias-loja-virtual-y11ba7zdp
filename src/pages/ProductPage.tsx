@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import {
   Check,
   ChevronRight,
-  ImageIcon,
+  ExternalLink,
   Minus,
   Plus,
   ShieldCheck,
-  ShoppingBag,
   Sparkles,
   Truck,
 } from 'lucide-react'
@@ -22,15 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useToast } from '@/hooks/use-toast'
 import { useStore } from '@/contexts/StoreContext'
 import { CATEGORY_LABELS, formatCurrency } from '@/types/store'
 
 export default function ProductPage() {
   const { slug } = useParams()
-  const navigate = useNavigate()
-  const { toast } = useToast()
-  const { products, productsLoading, addToCart } = useStore()
+  const { products, productsLoading, productsError, buyNow } = useStore()
   const product = products.find((item) => item.slug === slug)
   const [variation, setVariation] = useState('')
   const [quantity, setQuantity] = useState(1)
@@ -39,13 +35,15 @@ export default function ProductPage() {
     if (product) setVariation(product.variations[0] || 'Dourado')
   }, [product])
 
-  if (productsLoading) return <CenteredLoader label="Preparando os detalhes da peça..." />
+  if (productsLoading)
+    return <CenteredLoader label="Carregando peça ao vivo do Butterfly Gestão..." />
   if (!product) {
     return (
       <div className="site-shell py-24 text-center">
         <h1 className="font-serif text-4xl text-emerald-deep">Peça não encontrada</h1>
-        <p className="mt-3 text-muted-foreground">
-          Este item pode ter saído do catálogo provisório.
+        <p className="mt-3 text-muted-foreground max-w-md mx-auto">
+          {productsError ||
+            'Este item pode não estar disponível no catálogo ao vivo do Butterfly Gestão no momento.'}
         </p>
         <Button asChild className="mt-6">
           <Link to="/loja">Voltar à loja</Link>
@@ -57,10 +55,9 @@ export default function ProductPage() {
   const related = products
     .filter((item) => item.id !== product.id && item.category === product.category)
     .slice(0, 4)
-  const handleAdd = (goToCart = false) => {
-    addToCart(product, variation || product.variations[0] || 'Dourado', quantity)
-    toast({ title: 'Peça adicionada', description: `${product.name} está no seu carrinho.` })
-    if (goToCart) navigate('/carrinho')
+
+  const handleCheckout = () => {
+    buyNow(product, variation || product.variations[0] || 'Dourado', quantity)
   }
 
   return (
@@ -84,11 +81,6 @@ export default function ProductPage() {
             alt={product.image_alt || product.name}
             className="product-detail__image"
           />
-          {product.image_is_provisional && (
-            <span className="photo-provisional">
-              <ImageIcon className="size-3" /> Foto provisória
-            </span>
-          )}
         </div>
         <div className="py-2 lg:py-8">
           <div className="flex flex-wrap gap-2">
@@ -103,7 +95,7 @@ export default function ProductPage() {
             {formatCurrency(product.price_cents)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Preço provisório até a integração com o Butterfly Gestão
+            Preço e estoque sincronizados em tempo real com o Butterfly Gestão
           </p>
           <div className="my-7 h-px bg-emerald-900/10" />
           <p className="leading-8 text-muted-foreground">{product.description}</p>
@@ -141,7 +133,11 @@ export default function ProductPage() {
                 <button
                   aria-label="Aumentar quantidade"
                   className="p-2"
-                  onClick={() => setQuantity((value) => Math.min(product.stock, value + 1))}
+                  onClick={() =>
+                    setQuantity((value) =>
+                      Math.min(product.stock > 0 ? product.stock : 99, value + 1),
+                    )
+                  }
                 >
                   <Plus className="size-4" />
                 </button>
@@ -149,15 +145,21 @@ export default function ProductPage() {
             </div>
           </div>
           <p className="mt-3 inline-flex items-center gap-2 text-xs text-emerald-700">
-            <Check className="size-3.5" /> Disponível • estoque provisório: {product.stock} un.
+            <Check className="size-3.5" /> Disponível no Butterfly Gestão{' '}
+            {product.stock > 0 ? `• ${product.stock} un.` : ''}
           </p>
-          <div className="mt-7 grid gap-3 sm:grid-cols-2">
-            <Button size="lg" className="h-13" onClick={() => handleAdd(false)}>
-              <ShoppingBag className="mr-2 size-4" /> Adicionar ao carrinho
+          <div className="mt-7 grid gap-3">
+            <Button
+              size="lg"
+              className="h-14 text-base bg-emerald-deep text-white hover:bg-emerald-900 shadow-md"
+              onClick={handleCheckout}
+            >
+              Comprar no Butterfly Gestão <ExternalLink className="ml-2 size-5" />
             </Button>
-            <Button size="lg" variant="outline" className="h-13" onClick={() => handleAdd(true)}>
-              Comprar agora
-            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Ao clicar, você será direcionado com segurança ao checkout oficial do Butterfly Gestão
+              para concluir sua compra e acompanhar seu pedido.
+            </p>
           </div>
           <div className="mt-8 grid gap-4 border-y border-emerald-900/10 py-5 sm:grid-cols-3">
             <div className="product-benefit">

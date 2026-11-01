@@ -121,12 +121,34 @@ export default function Index() {
           {productsLoading ? (
             <LoadingGrid />
           ) : productsError ? (
-            <ErrorState message={productsError} onRetry={() => void refreshProducts()} />
-          ) : (
+            <div className="rounded-sm border border-amber-200 bg-amber-50 p-8 text-center">
+              <h3 className="font-serif text-2xl text-emerald-deep">
+                Catálogo ao vivo indisponível
+              </h3>
+              <p className="mt-2 text-sm text-amber-900 max-w-xl mx-auto">{productsError}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Em respeito à transparência, nenhum produto fictício é exibido nesta loja.
+              </p>
+              <Button variant="outline" className="mt-4" onClick={() => void refreshProducts()}>
+                Tentar novamente
+              </Button>
+            </div>
+          ) : featured.length > 0 ? (
             <div className="product-grid">
               {featured.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
+            </div>
+          ) : (
+            <div className="rounded-sm bg-ivory p-12 text-center">
+              <h3 className="font-serif text-2xl text-emerald-deep">Catálogo em preparação</h3>
+              <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+                Nenhuma peça cadastrada no momento no Butterfly Gestão. Novas semijoias serão
+                exibidas aqui assim que publicadas.
+              </p>
+              <Button asChild variant="outline" className="mt-5">
+                <Link to="/sobre">Conhecer a Butterfly</Link>
+              </Button>
             </div>
           )}
         </div>

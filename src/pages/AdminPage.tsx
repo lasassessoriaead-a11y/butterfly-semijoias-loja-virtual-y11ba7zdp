@@ -83,6 +83,58 @@ export default function AdminPage() {
     [data],
   )
 
+  const gestaoIntegrationSetting = useMemo(
+    () => data?.settings.find((s) => s.key === 'butterfly_gestao_integration'),
+    [data?.settings],
+  )
+  const gestaoValues = (gestaoIntegrationSetting?.value || {}) as {
+    baseUrl?: string
+    token?: string
+    checkoutUrl?: string
+  }
+  const [gestaoForm, setGestaoForm] = useState({
+    baseUrl: '',
+    token: '',
+    checkoutUrl: '',
+  })
+
+  useEffect(() => {
+    if (gestaoIntegrationSetting) {
+      setGestaoForm({
+        baseUrl: String(gestaoValues.baseUrl || ''),
+        token: String(gestaoValues.token || ''),
+        checkoutUrl: String(gestaoValues.checkoutUrl || ''),
+      })
+    }
+  }, [gestaoIntegrationSetting])
+
+  const saveGestaoConfig = async () => {
+    if (!gestaoIntegrationSetting) return
+    try {
+      await storeApi.updateSetting(
+        gestaoIntegrationSetting.id,
+        {
+          ...gestaoValues,
+          baseUrl: gestaoForm.baseUrl.trim(),
+          token: gestaoForm.token.trim(),
+          checkoutUrl: gestaoForm.checkoutUrl.trim(),
+        },
+        gestaoIntegrationSetting.description,
+      )
+      toast({
+        title: 'Integração Butterfly Gestão salva',
+        description: 'Parâmetros atualizados no backend com sucesso.',
+      })
+      void load()
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Falha ao salvar integração',
+        description: readableError(err),
+      })
+    }
+  }
+
   if (!authReady) return <CenteredLoader label="Verificando acesso administrativo..." />
   if (!user) return <Navigate to="/conta?retorno=/admin" replace />
   if (!isAdmin)
@@ -460,10 +512,72 @@ export default function AdminPage() {
           <TabsContent value="settings" className="admin-panel">
             <div className="admin-panel__heading">
               <div>
-                <h2>Configurações</h2>
-                <p>Estados operacionais mantidos no backend. Segredos nunca aparecem aqui.</p>
+                <h2>Integração Butterfly Gestão & Configurações</h2>
+                <p>
+                  Fonte principal do catálogo ao vivo (GET /api/shop) e checkout com source=skip.
+                </p>
               </div>
             </div>
+
+            <div className="mb-6 rounded-sm border border-emerald-300 bg-emerald-50/50 p-6">
+              <div className="flex items-center gap-2">
+                <Settings className="size-5 text-emerald-deep" />
+                <h3 className="font-serif text-xl text-emerald-deep">
+                  Conexão com Butterfly Gestão
+                </h3>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                Configure a URL base e o token de acesso da API do Butterfly Gestão. A loja
+                consumirá <code>GET /api/shop</code> ao vivo e redirecionará as compras para a URL
+                de checkout com <code>source=skip</code>.
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Label htmlFor="gestao-url">URL Base do Butterfly Gestão</Label>
+                  <Input
+                    id="gestao-url"
+                    placeholder="https://gestao.butterflysemijoias.com.br"
+                    value={gestaoForm.baseUrl}
+                    onChange={(e) => setGestaoForm({ ...gestaoForm, baseUrl: e.target.value })}
+                    className="mt-1 h-10"
+                  />
+                  <span className="text-[0.7rem] text-muted-foreground">
+                    Ex: URL do projeto Gestão (sem barra no final).
+                  </span>
+                </div>
+                <div>
+                  <Label htmlFor="gestao-token">Token de Acesso (Bearer / Header)</Label>
+                  <Input
+                    id="gestao-token"
+                    type="password"
+                    placeholder="Token da API /api/shop"
+                    value={gestaoForm.token}
+                    onChange={(e) => setGestaoForm({ ...gestaoForm, token: e.target.value })}
+                    className="mt-1 h-10"
+                  />
+                  <span className="text-[0.7rem] text-muted-foreground">
+                    Enviado no backend em cabeçalho Authorization e X-Gestao-Token.
+                  </span>
+                </div>
+                <div>
+                  <Label htmlFor="gestao-checkout">URL do Checkout</Label>
+                  <Input
+                    id="gestao-checkout"
+                    placeholder="https://gestao.butterflysemijoias.com.br/checkout"
+                    value={gestaoForm.checkoutUrl}
+                    onChange={(e) => setGestaoForm({ ...gestaoForm, checkoutUrl: e.target.value })}
+                    className="mt-1 h-10"
+                  />
+                  <span className="text-[0.7rem] text-muted-foreground">
+                    Opcional (padrão: base URL + /checkout).
+                  </span>
+                </div>
+              </div>
+              <Button className="mt-4" onClick={() => void saveGestaoConfig()}>
+                <Save className="mr-2 size-4" /> Salvar Integração Gestão
+              </Button>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               {data.settings.map((s) => (
                 <div key={s.id} className="rounded-sm border bg-white p-5">
@@ -482,10 +596,8 @@ export default function AdminPage() {
               ))}
             </div>
             <div className="mt-6 rounded-sm border border-emerald-200 bg-emerald-50 p-5 text-sm leading-6 text-emerald-950">
-              <strong>Webhook Woovi:</strong> endpoint preparado em{' '}
-              <code>/backend/v1/butterfly/v1/webhooks/woovi</code>. O segredo{' '}
-              <code>WOOVI_WEBHOOK_SECRET</code> ainda não está configurado; nesse estado seguro, o
-              endpoint rejeita todas as confirmações e nenhum pedido pode virar pago.
+              <strong>Regra permanente:</strong> a loja Butterfly é a vitrine do Butterfly Gestão.
+              Nenhuma cobrança real ou ERP paralelo é criado aqui.
             </div>
           </TabsContent>
         </Tabs>

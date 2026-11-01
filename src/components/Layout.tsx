@@ -1,15 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import {
-  Instagram,
-  LockKeyhole,
-  Menu,
-  Search,
-  ShieldCheck,
-  ShoppingBag,
-  UserRound,
-  X,
-} from 'lucide-react'
+import { Instagram, LockKeyhole, Menu, Search, ShieldCheck, UserRound, X } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -62,7 +53,7 @@ function NavigationLinks({
 export function Layout() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
-  const { cartCount, user, isAdmin } = useStore()
+  const { user, isAdmin } = useStore()
   const location = useLocation()
 
   useEffect(() => {
@@ -140,20 +131,6 @@ export function Layout() {
             >
               <Link to="/conta">
                 <UserRound className="size-5" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="ghost"
-              size="icon"
-              className="relative"
-              aria-label={`Carrinho com ${cartCount} itens`}
-            >
-              <Link to="/carrinho">
-                <ShoppingBag className="size-5" />
-                {cartCount > 0 && (
-                  <span className="cart-count">{cartCount > 99 ? '99+' : cartCount}</span>
-                )}
               </Link>
             </Button>
           </div>

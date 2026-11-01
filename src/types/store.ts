@@ -3,7 +3,7 @@ export type ProductCategory = 'brincos' | 'colares' | 'pulseiras' | 'aneis' | 'c
 export interface Product {
   id: string
   sku: string
-  external_id: string
+  external_id?: string
   slug: string
   name: string
   description: string
@@ -20,8 +20,41 @@ export interface Product {
   is_new: boolean
   best_seller: boolean
   source: 'provisional' | 'butterfly_gestao'
-  created: string
-  updated: string
+  checkoutUrl?: string
+  created?: string
+  updated?: string
+}
+
+export interface GestaoPublicConfig {
+  publicationEnabled: boolean
+  storeStatus: string
+  payments: {
+    provider: string
+    mode: string
+    realChargesEnabled: boolean
+  }
+  shipping: {
+    provider: string
+    realCarrierQuote: boolean
+  }
+  inventory: {
+    primarySource: string
+    connected: boolean
+    currentData: string
+  }
+  gestao: {
+    configured: boolean
+    checkoutUrl: string
+  }
+}
+
+export interface GestaoShopResponse {
+  configured: boolean
+  source: 'butterfly_gestao'
+  products: Product[]
+  count: number
+  checkoutBaseUrl?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface CartItem {

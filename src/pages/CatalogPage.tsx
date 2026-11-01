@@ -157,16 +157,39 @@ export default function CatalogPage({ mode = 'all' }: { mode?: 'all' | 'new' | '
               </p>
               <Filters selected={selectedCategory} onSelect={setSelectedCategory} />
               <div className="mt-8 rounded-sm bg-ivory p-5 text-xs leading-6 text-muted-foreground">
-                <strong className="block text-emerald-deep">Catálogo provisório</strong>
-                Produtos, fotos, preços e estoque aguardam a futura sincronização com o Butterfly
-                Gestão.
+                <strong className="block text-emerald-deep">Catálogo ao vivo</strong>
+                Produtos, fotos, preços e estoque são carregados diretamente do Butterfly Gestão.
+                Nenhuma peça fictícia é exibida.
               </div>
             </aside>
             <div>
               {productsLoading ? (
                 <LoadingGrid />
               ) : productsError ? (
-                <ErrorState message={productsError} onRetry={() => void refreshProducts()} />
+                <div className="rounded-sm border border-amber-200 bg-amber-50 p-10 text-center">
+                  <h2 className="font-serif text-2xl text-emerald-deep">
+                    Catálogo ao vivo indisponível
+                  </h2>
+                  <p className="mt-3 text-sm text-amber-900 max-w-lg mx-auto">{productsError}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Conforme as diretrizes de transparência da Butterfly, produtos fictícios não são
+                    exibidos quando a API está fora do ar.
+                  </p>
+                  <Button variant="outline" className="mt-5" onClick={() => void refreshProducts()}>
+                    Tentar novamente
+                  </Button>
+                </div>
+              ) : products.length === 0 ? (
+                <div className="rounded-sm bg-ivory p-14 text-center">
+                  <h2 className="font-serif text-3xl text-emerald-deep">Catálogo em preparação</h2>
+                  <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
+                    Não há produtos disponíveis no Butterfly Gestão no momento. Assim que o estoque
+                    for adicionado lá, o catálogo será atualizado automaticamente aqui.
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Nenhum produto fictício é exibido.
+                  </p>
+                </div>
               ) : filtered.length ? (
                 <div className="product-grid product-grid--catalog">
                   {filtered.map((product) => (
@@ -177,7 +200,7 @@ export default function CatalogPage({ mode = 'all' }: { mode?: 'all' | 'new' | '
                 <div className="rounded-sm bg-ivory p-12 text-center">
                   <h2 className="font-serif text-2xl text-emerald-deep">Nenhuma peça encontrada</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Tente outra busca ou remova os filtros.
+                    Tente outra busca ou remova os filtros selecionados.
                   </p>
                   <Button
                     variant="outline"

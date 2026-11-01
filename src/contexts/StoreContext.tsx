@@ -6,6 +6,8 @@ interface StoreContextValue {
   products: Product[]
   productsLoading: boolean
   productsError: string
+  isGestaoConfigured: boolean
+  checkoutBaseUrl: string
   user: UserRecord | null
   authReady: boolean
   isAdmin: boolean
@@ -16,6 +18,7 @@ interface StoreContextValue {
   updateCartQuantity: (productId: string, variation: string, quantity: number) => void
   removeFromCart: (productId: string, variation: string) => void
   clearCart: () => void
+  buyNow: (product: Product, variation?: string, quantity?: number) => void
   refreshProducts: () => Promise<void>
   login: (email: string, password: string) => Promise<void>
   register: (data: {
@@ -45,6 +48,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([])
   const [productsLoading, setProductsLoading] = useState(true)
   const [productsError, setProductsError] = useState('')
+  const [isGestaoConfigured, setIsGestaoConfigured] = useState(true)
+  const [checkoutBaseUrl, setCheckoutBaseUrl] = useState('')
   const [user, setUser] = useState<UserRecord | null>(storeApi.currentUser())
   const [authReady, setAuthReady] = useState(false)
   const [cart, setCart] = useState<CartItem[]>(loadCart)
@@ -53,9 +58,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setProductsLoading(true)
     setProductsError('')
     try {
-      setProducts(await storeApi.listProducts())
-    } catch {
-      setProductsError('Não foi possível carregar o catálogo agora.')
+      const response = await storeApi.listLiveShop()
+      setProducts(response.products || [])
+      setIsGestaoConfigured(response.configured)
+      if (response.checkoutBaseUrl) {
+        setCheckoutBaseUrl(response.checkoutBaseUrl)
+      }
+    } catch (err) {
+      const message =
+        err &&
+        typeof err === 'object' &&
+        'message' in err &&
+        typeof (err as { message: unknown }).message === 'string'
+          ? (err as { message: string }).message
+          : 'Não foi possível carregar o catálogo ao vivo do Butterfly Gestão no momento.'
+      setProducts([])
+      setProductsError(message)
     } finally {
       setProductsLoading(false)
     }
@@ -123,11 +141,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  const buyNow = (product: Product, variation?: string, quantity = 1) => {
+    const url = storeApi.buildCheckoutUrl(product, variation, quantity, checkoutBaseUrl)
+    if (url) {
+      window.location.href = url
+    } else {
+      // Fallback gracioso se a URL do checkout ainda não estiver definida
+      addToCart(product, variation || product.variations[0] || 'Dourado', quantity)
+    }
+  }
+
   const value = useMemo<StoreContextValue>(
     () => ({
       products,
       productsLoading,
       productsError,
+      isGestaoConfigured,
+      checkoutBaseUrl,
       user,
       authReady,
       isAdmin: user?.role === 'admin',
@@ -138,12 +168,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateCartQuantity,
       removeFromCart,
       clearCart: () => setCart([]),
+      buyNow,
       refreshProducts,
       login,
       register,
       logout,
     }),
-    [products, productsLoading, productsError, user, authReady, cart],
+    [
+      products,
+      productsLoading,
+      productsError,
+      isGestaoConfigured,
+      checkoutBaseUrl,
+      user,
+      authReady,
+      cart,
+    ],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
