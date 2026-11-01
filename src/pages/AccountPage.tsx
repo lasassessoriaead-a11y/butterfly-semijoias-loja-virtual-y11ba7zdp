@@ -233,7 +233,7 @@ export default function AccountPage() {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="font-serif text-3xl text-emerald-deep">Histórico de pedidos</h2>
                   <p className="text-xs text-muted-foreground">
-                    Novas compras são concluídas e acompanhadas diretamente pelo Butterfly Gestão
+                    Acompanhe suas compras e pedidos da Butterfly SEMIJOIAS
                   </p>
                 </div>
                 {orders.length ? (
@@ -283,8 +283,8 @@ export default function AccountPage() {
                       Você ainda não registrou pedidos anteriores nesta conta.
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Suas novas compras na Butterfly são finalizadas com segurança no checkout do
-                      Butterfly Gestão.
+                      Suas compras na Butterfly SEMIJOIAS contam com ambiente seguro e
+                      acompanhamento completo.
                     </p>
                     <Button asChild className="mt-4">
                       <Link to="/loja">Explorar a loja</Link>

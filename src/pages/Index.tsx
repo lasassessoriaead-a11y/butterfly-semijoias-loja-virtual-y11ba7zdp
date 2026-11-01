@@ -143,8 +143,8 @@ export default function Index() {
             <div className="rounded-sm bg-ivory p-12 text-center">
               <h3 className="font-serif text-2xl text-emerald-deep">Catálogo em preparação</h3>
               <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                Nenhuma peça cadastrada no momento no Butterfly Gestão. Novas semijoias serão
-                exibidas aqui assim que publicadas.
+                Nenhuma peça cadastrada no momento no catálogo. Novas semijoias serão exibidas aqui
+                assim que publicadas.
               </p>
               <Button asChild variant="outline" className="mt-5">
                 <Link to="/sobre">Conhecer a Butterfly</Link>

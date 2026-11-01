@@ -71,7 +71,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         'message' in err &&
         typeof (err as { message: unknown }).message === 'string'
           ? (err as { message: string }).message
-          : 'Não foi possível carregar o catálogo ao vivo do Butterfly Gestão no momento.'
+          : 'Não foi possível carregar o catálogo ao vivo no momento.'
       setProducts([])
       setProductsError(message)
     } finally {

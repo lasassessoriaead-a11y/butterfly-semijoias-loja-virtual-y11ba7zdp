@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, ExternalLink } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -52,7 +52,7 @@ export function ProductCard({ product }: { product: Product }) {
                 buyNow(product)
               }}
             >
-              Comprar <ExternalLink className="ml-1 size-3" />
+              Adicionar à sacola
             </Button>
           ) : (
             <span className="text-xs text-muted-foreground">Catálogo ao vivo</span>

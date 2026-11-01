@@ -158,8 +158,8 @@ export default function CatalogPage({ mode = 'all' }: { mode?: 'all' | 'new' | '
               <Filters selected={selectedCategory} onSelect={setSelectedCategory} />
               <div className="mt-8 rounded-sm bg-ivory p-5 text-xs leading-6 text-muted-foreground">
                 <strong className="block text-emerald-deep">Catálogo ao vivo</strong>
-                Produtos, fotos, preços e estoque são carregados diretamente do Butterfly Gestão.
-                Nenhuma peça fictícia é exibida.
+                Produtos, fotos, preços e estoque são atualizados em tempo real pela Butterfly
+                SEMIJOIAS. Nenhuma peça fictícia é exibida.
               </div>
             </aside>
             <div>
@@ -183,8 +183,8 @@ export default function CatalogPage({ mode = 'all' }: { mode?: 'all' | 'new' | '
                 <div className="rounded-sm bg-ivory p-14 text-center">
                   <h2 className="font-serif text-3xl text-emerald-deep">Catálogo em preparação</h2>
                   <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
-                    Não há produtos disponíveis no Butterfly Gestão no momento. Assim que o estoque
-                    for adicionado lá, o catálogo será atualizado automaticamente aqui.
+                    Não há produtos disponíveis no catálogo no momento. Assim que o estoque for
+                    adicionado, as semijoias serão exibidas automaticamente aqui.
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Nenhum produto fictício é exibido.

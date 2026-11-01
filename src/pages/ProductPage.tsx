@@ -1,15 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import {
-  Check,
-  ChevronRight,
-  ExternalLink,
-  Minus,
-  Plus,
-  ShieldCheck,
-  Sparkles,
-  Truck,
-} from 'lucide-react'
+import { Check, ChevronRight, Minus, Plus, ShieldCheck, Sparkles, Truck } from 'lucide-react'
 import { CenteredLoader } from '@/components/LoadingState'
 import { ProductCard } from '@/components/ProductCard'
 import { Badge } from '@/components/ui/badge'
@@ -35,15 +26,13 @@ export default function ProductPage() {
     if (product) setVariation(product.variations[0] || 'Dourado')
   }, [product])
 
-  if (productsLoading)
-    return <CenteredLoader label="Carregando peça ao vivo do Butterfly Gestão..." />
+  if (productsLoading) return <CenteredLoader label="Carregando peça..." />
   if (!product) {
     return (
       <div className="site-shell py-24 text-center">
         <h1 className="font-serif text-4xl text-emerald-deep">Peça não encontrada</h1>
         <p className="mt-3 text-muted-foreground max-w-md mx-auto">
-          {productsError ||
-            'Este item pode não estar disponível no catálogo ao vivo do Butterfly Gestão no momento.'}
+          {productsError || 'Este item pode não estar disponível no catálogo no momento.'}
         </p>
         <Button asChild className="mt-6">
           <Link to="/loja">Voltar à loja</Link>
@@ -95,7 +84,7 @@ export default function ProductPage() {
             {formatCurrency(product.price_cents)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Preço e estoque sincronizados em tempo real com o Butterfly Gestão
+            Preço e estoque sincronizados em tempo real
           </p>
           <div className="my-7 h-px bg-emerald-900/10" />
           <p className="leading-8 text-muted-foreground">{product.description}</p>
@@ -145,21 +134,17 @@ export default function ProductPage() {
             </div>
           </div>
           <p className="mt-3 inline-flex items-center gap-2 text-xs text-emerald-700">
-            <Check className="size-3.5" /> Disponível no Butterfly Gestão{' '}
+            <Check className="size-3.5" /> Disponível{' '}
             {product.stock > 0 ? `• ${product.stock} un.` : ''}
           </p>
-          <div className="mt-7 grid gap-3">
+          <div className="mt-7">
             <Button
               size="lg"
-              className="h-14 text-base bg-emerald-deep text-white hover:bg-emerald-900 shadow-md"
+              className="h-14 w-full text-base bg-emerald-deep text-white hover:bg-emerald-900 shadow-md"
               onClick={handleCheckout}
             >
-              Comprar no Butterfly Gestão <ExternalLink className="ml-2 size-5" />
+              Adicionar à sacola
             </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              Ao clicar, você será direcionado com segurança ao checkout oficial do Butterfly Gestão
-              para concluir sua compra e acompanhar seu pedido.
-            </p>
           </div>
           <div className="mt-8 grid gap-4 border-y border-emerald-900/10 py-5 sm:grid-cols-3">
             <div className="product-benefit">
