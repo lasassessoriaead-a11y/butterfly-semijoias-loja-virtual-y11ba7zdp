@@ -12,7 +12,7 @@ import {
   Trash2,
   Truck,
 } from 'lucide-react'
-import { TestQrCode } from '@/components/TestQrCode'
+import QRCode from 'qrcode'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -50,29 +50,42 @@ export default function CartCheckoutPage() {
   const [quoting, setQuoting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [order, setOrder] = useState<CheckoutOrder | null>(null)
-
+  const [qrData, setQrData] = useState('')
   const [checkoutId] = useState(() => `checkout_${crypto.randomUUID().replace(/-/g, '')}`)
 
   useEffect(() => {
-    if (!user) return
-    storeApi
-      .listAddresses()
-      .then((addresses) => {
-        if (!addresses.length) return
-        const saved = addresses[0]
-        setAddress({
-          recipient: saved.recipient,
-          postalCode: saved.postal_code,
-          street: saved.street,
-          number: saved.number,
-          complement: saved.complement,
-          neighborhood: saved.neighborhood,
-          city: saved.city,
-          state: saved.state,
+    if (user) {
+      void storeApi
+        .listAddresses()
+        .then((addresses) => {
+          if (!addresses.length) return
+          const saved = addresses[0]
+          setAddress({
+            recipient: saved.recipient,
+            postalCode: saved.postal_code,
+            street: saved.street,
+            number: saved.number,
+            complement: saved.complement,
+            neighborhood: saved.neighborhood,
+            city: saved.city,
+            state: saved.state,
+          })
         })
-      })
-      .catch(() => undefined)
+        .catch(() => undefined)
+    }
   }, [user])
+
+  useEffect(() => {
+    if (!order?.pixCopyPaste) return
+    QRCode.toDataURL(order.pixCopyPaste, {
+      width: 560,
+      margin: 3,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#075746', light: '#FFFFFF' },
+    })
+      .then(setQrData)
+      .catch(() => setQrData(''))
+  }, [order])
 
   const total = useMemo(() => cartSubtotal + (quote?.priceCents || 0), [cartSubtotal, quote])
   const changeAddress = (field: keyof CheckoutAddress, value: string) =>
@@ -174,7 +187,11 @@ export default function CartCheckoutPage() {
           </div>
           <div className="mt-6 grid gap-8 rounded-sm border p-6 md:grid-cols-[280px_1fr] md:p-8">
             <div className="flex min-h-[280px] items-center justify-center rounded-sm bg-white p-2 shadow-inner">
-              <TestQrCode value={order.pixCopyPaste} />
+              {qrData ? (
+                <img src={qrData} alt="QR Code Pix de teste" className="w-full" />
+              ) : (
+                <QrCode className="size-32 text-emerald-100" />
+              )}
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-gold-deep">
