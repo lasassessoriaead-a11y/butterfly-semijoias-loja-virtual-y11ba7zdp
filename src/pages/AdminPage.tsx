@@ -523,40 +523,42 @@ export default function AdminPage() {
               <div className="flex items-center gap-2">
                 <Settings className="size-5 text-emerald-deep" />
                 <h3 className="font-serif text-xl text-emerald-deep">
-                  Conexão com Butterfly Gestão
+                  Conexão com Butterfly Gestão (Catálogo Oficial)
                 </h3>
               </div>
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                Configure a URL base e o token de acesso da API do Butterfly Gestão. A loja
-                consumirá <code>GET /api/shop</code> ao vivo e redirecionará as compras para a URL
-                de checkout com <code>source=skip</code>.
+                O catálogo oficial consome <code>GET /api/shop</code> ao vivo sem exigência de
+                token. As compras são redirecionadas diretamente ao checkout correspondente com{' '}
+                <code>source=skip</code>.
               </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <Label htmlFor="gestao-url">URL Base do Butterfly Gestão</Label>
                   <Input
                     id="gestao-url"
-                    placeholder="https://gestao.butterflysemijoias.com.br"
+                    placeholder="https://butterfly-semijoias-gestao.luka251083739205.chatgpt.site"
                     value={gestaoForm.baseUrl}
                     onChange={(e) => setGestaoForm({ ...gestaoForm, baseUrl: e.target.value })}
                     className="mt-1 h-10"
                   />
                   <span className="text-[0.7rem] text-muted-foreground">
-                    Ex: URL do projeto Gestão (sem barra no final).
+                    Catálogo oficial configurado:
+                    https://butterfly-semijoias-gestao.luka251083739205.chatgpt.site (endpoint
+                    público /api/shop, sem necessidade de token).
                   </span>
                 </div>
                 <div>
-                  <Label htmlFor="gestao-token">Token de Acesso (Bearer / Header)</Label>
+                  <Label htmlFor="gestao-token">Token de Acesso (Opcional — Não exigido)</Label>
                   <Input
                     id="gestao-token"
                     type="password"
-                    placeholder="Token da API /api/shop"
+                    placeholder="Opcional (não exigido para catálogo público)"
                     value={gestaoForm.token}
                     onChange={(e) => setGestaoForm({ ...gestaoForm, token: e.target.value })}
                     className="mt-1 h-10"
                   />
                   <span className="text-[0.7rem] text-muted-foreground">
-                    Enviado no backend em cabeçalho Authorization e X-Gestao-Token.
+                    O endpoint oficial é público e não requer token.
                   </span>
                 </div>
                 <div>

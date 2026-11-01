@@ -24,6 +24,7 @@ routerAdd('GET', '/backend/v1/butterfly/v1/shipping/quote', (e) => {
 })
 
 routerAdd('GET', '/backend/v1/butterfly/v1/public-config', (e) => {
+  const DEFAULT_GESTAO_BASE = 'https://butterfly-semijoias-gestao.luka251083739205.chatgpt.site'
   let baseUrl = $os.getenv('BUTTERFLY_GESTAO_URL') || ''
   let checkoutUrl = $os.getenv('BUTTERFLY_GESTAO_CHECKOUT_URL') || ''
 
@@ -42,7 +43,11 @@ routerAdd('GET', '/backend/v1/butterfly/v1/public-config', (e) => {
     }
   } catch (_) {}
 
-  baseUrl = baseUrl.replace(/\/+$/, '')
+  if (!baseUrl) {
+    baseUrl = DEFAULT_GESTAO_BASE
+  }
+
+  baseUrl = baseUrl.replace(/\/api\/shop\/?$/i, '').replace(/\/+$/, '')
   if (!checkoutUrl && baseUrl) {
     checkoutUrl = baseUrl + '/checkout'
   }
@@ -65,6 +70,7 @@ routerAdd('GET', '/backend/v1/butterfly/v1/public-config', (e) => {
 })
 
 routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
+  const DEFAULT_GESTAO_BASE = 'https://butterfly-semijoias-gestao.luka251083739205.chatgpt.site'
   let baseUrl = $os.getenv('BUTTERFLY_GESTAO_URL') || ''
   let token = $os.getenv('BUTTERFLY_GESTAO_TOKEN') || ''
   let checkoutUrl = $os.getenv('BUTTERFLY_GESTAO_CHECKOUT_URL') || ''
@@ -85,7 +91,11 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
     }
   } catch (_) {}
 
-  baseUrl = baseUrl.replace(/\/+$/, '')
+  if (!baseUrl) {
+    baseUrl = DEFAULT_GESTAO_BASE
+  }
+
+  baseUrl = baseUrl.replace(/\/api\/shop\/?$/i, '').replace(/\/+$/, '')
   if (!checkoutUrl && baseUrl) {
     checkoutUrl = baseUrl + '/checkout'
   }
@@ -94,8 +104,7 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
     return e.json(503, {
       configured: false,
       error: 'INTEGRATION_UNCONFIGURED',
-      message:
-        'A integração com o Butterfly Gestão aguarda a configuração da URL e do token de acesso.',
+      message: 'A integração com o Butterfly Gestão aguarda a configuração da URL do catálogo.',
     })
   }
 
@@ -225,14 +234,20 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
         is_new: Boolean(p.isNew || p.is_new || p.lancamento),
         best_seller: Boolean(p.bestSeller || p.best_seller || p.maisVendido),
         source: 'butterfly_gestao',
-        checkoutUrl: gestao.checkoutUrl
-          ? gestao.checkoutUrl +
-            '?sku=' +
+        checkoutUrl: (function () {
+          const base = String(p.checkoutUrl || p.checkout_url || gestao.checkoutUrl || '')
+          if (!base) return ''
+          const sep = base.indexOf('?') !== -1 ? '&' : '?'
+          return (
+            base +
+            sep +
+            'sku=' +
             encodeURIComponent(sku) +
             '&productId=' +
             encodeURIComponent(id) +
             '&source=skip'
-          : '',
+          )
+        })(),
       }
     })
 
