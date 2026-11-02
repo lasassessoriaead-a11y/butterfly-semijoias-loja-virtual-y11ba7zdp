@@ -46,11 +46,13 @@ export default function CatalogPage({ mode = 'all' }: { mode?: 'all' | 'new' | '
   const [selectedCategory, setSelectedCategory] = useState(validCategory)
   const [search, setSearch] = useState(initialSearch)
   const [sort, setSort] = useState('featured')
-  const { products, productsLoading, productsError, refreshProducts } = useStore()
+  const { jewelryProducts, productsLoading, productsError, refreshProducts } = useStore()
 
   const filtered = useMemo(() => {
     const normalized = search.trim().toLocaleLowerCase('pt-BR')
-    const result = products.filter((product) => {
+    // As seções exclusivas de semijoias (Loja, Lançamentos, Mais Vendidos) filtram productType=jewelry,
+    // preservando compatibilidade com registros antigos sem esse campo
+    const result = jewelryProducts.filter((product) => {
       if (selectedCategory !== 'todos' && product.category !== selectedCategory) return false
       if (mode === 'new' && !product.is_new) return false
       if (mode === 'best' && !product.best_seller) return false
@@ -69,7 +71,7 @@ export default function CatalogPage({ mode = 'all' }: { mode?: 'all' | 'new' | '
       if (sort === 'name') return a.name.localeCompare(b.name, 'pt-BR')
       return Number(b.featured) - Number(a.featured) || Number(b.is_new) - Number(a.is_new)
     })
-  }, [products, selectedCategory, search, sort, mode])
+  }, [jewelryProducts, selectedCategory, search, sort, mode])
 
   const title =
     mode === 'new'
@@ -179,16 +181,21 @@ export default function CatalogPage({ mode = 'all' }: { mode?: 'all' | 'new' | '
                     Tentar novamente
                   </Button>
                 </div>
-              ) : products.length === 0 ? (
+              ) : jewelryProducts.length === 0 ? (
                 <div className="rounded-sm bg-ivory p-14 text-center">
                   <h2 className="font-serif text-3xl text-emerald-deep">Catálogo em preparação</h2>
                   <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
-                    Não há produtos disponíveis no catálogo no momento. Assim que o estoque for
-                    adicionado, as semijoias serão exibidas automaticamente aqui.
+                    Não há semijoias disponíveis no catálogo no momento. Assim que o estoque for
+                    adicionado, as peças serão exibidas automaticamente aqui.
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Nenhum produto fictício é exibido.
                   </p>
+                  <div className="mt-5">
+                    <Button asChild variant="outline">
+                      <a href="/tshirteria">Conhecer a T-shirteria</a>
+                    </Button>
+                  </div>
                 </div>
               ) : filtered.length ? (
                 <div className="product-grid product-grid--catalog">

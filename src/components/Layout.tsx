@@ -27,6 +27,7 @@ const mainLinks = [
   ['Loja', '/loja'],
   ['Lançamentos', '/lancamentos'],
   ['Mais vendidos', '/mais-vendidos'],
+  ['T-shirteria', '/tshirteria'],
   ['Seja revendedora', '/revendedora'],
   ['Sobre', '/sobre'],
   ['Contato', '/contato'],
@@ -241,6 +242,7 @@ export function Layout() {
               <Link to="/loja">Todas as peças</Link>
               <Link to="/lancamentos">Lançamentos</Link>
               <Link to="/mais-vendidos">Mais vendidos</Link>
+              <Link to="/tshirteria">T-shirteria</Link>
               <Link to="/revendedora">Seja revendedora</Link>
             </div>
           </div>

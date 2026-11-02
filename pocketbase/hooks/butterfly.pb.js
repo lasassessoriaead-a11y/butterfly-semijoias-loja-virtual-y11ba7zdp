@@ -108,7 +108,16 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
     })
   }
 
-  const endpoint = gestao.baseUrl + '/api/shop'
+  const reqProductType = String(e.request.url.query().get('productType') || '')
+    .trim()
+    .toLowerCase()
+  let endpoint = gestao.baseUrl + '/api/shop'
+  if (reqProductType) {
+    endpoint +=
+      (endpoint.indexOf('?') !== -1 ? '&' : '?') +
+      'productType=' +
+      encodeURIComponent(reqProductType)
+  }
   const headers = { Accept: 'application/json' }
   if (gestao.token) {
     headers['Authorization'] = 'Bearer ' + gestao.token
@@ -145,6 +154,7 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
     }
 
     let rawProducts = []
+    let rawTshirtModels = []
     let metadata = {}
     if (Array.isArray(payload)) {
       rawProducts = payload
@@ -152,6 +162,10 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
       if (Array.isArray(payload.products)) rawProducts = payload.products
       else if (Array.isArray(payload.data)) rawProducts = payload.data
       else if (Array.isArray(payload.items)) rawProducts = payload.items
+
+      if (Array.isArray(payload.tshirtModels)) {
+        rawTshirtModels = payload.tshirtModels
+      }
       metadata = payload.metadata || payload.meta || {}
     }
 
@@ -214,6 +228,14 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
       const stock = typeof p.stock === 'number' ? p.stock : p.stockQuantity || p.quantity || 0
       const available = typeof p.available === 'boolean' ? p.available : stock > 0
 
+      const productType = String(p.productType || p.product_type || '').toLowerCase()
+      const availabilityMode = String(p.availabilityMode || p.availability_mode || 'pronta_entrega')
+      const modelId = p.modelId != null ? String(p.modelId) : undefined
+      const modelName = p.modelName != null ? String(p.modelName) : undefined
+      const color = p.color != null ? String(p.color) : undefined
+      const size = p.size != null ? String(p.size) : undefined
+      const photo = p.photo != null ? String(p.photo) : undefined
+
       return {
         id: id,
         sku: sku,
@@ -225,7 +247,7 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
         price_cents: Math.max(0, priceCents),
         compare_price_cents: Math.max(0, comparePriceCents),
         variations: variations,
-        image_url: imageUrl,
+        image_url: imageUrl || photo || '',
         image_alt: String(p.imageAlt || p.image_alt || name),
         image_is_provisional: false,
         stock: Math.max(0, stock),
@@ -233,21 +255,95 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
         featured: Boolean(p.featured || p.destaque),
         is_new: Boolean(p.isNew || p.is_new || p.lancamento),
         best_seller: Boolean(p.bestSeller || p.best_seller || p.maisVendido),
+        productType: productType || undefined,
+        availabilityMode: availabilityMode,
+        modelId: modelId,
+        modelName: modelName,
+        color: color,
+        size: size,
+        photo: photo,
+        price: typeof p.price === 'number' ? p.price : priceCents / 100,
         source: 'butterfly_gestao',
         checkoutUrl: (function () {
           const base = String(p.checkoutUrl || p.checkout_url || gestao.checkoutUrl || '')
           if (!base) return ''
           const sep = base.indexOf('?') !== -1 ? '&' : '?'
-          return (
-            base +
-            sep +
-            'sku=' +
-            encodeURIComponent(sku) +
-            '&productId=' +
-            encodeURIComponent(id) +
-            '&source=skip'
-          )
+          return base + sep + 'productId=' + encodeURIComponent(id) + '&quantity=1&source=skip'
         })(),
+      }
+    })
+
+    const normalizedTshirtModels = rawTshirtModels.map((m, mIndex) => {
+      const id = String(m.id || 'model-' + mIndex)
+      const name = String(m.name || 'T-shirt Butterfly')
+      const description = String(m.description || '')
+      const photo = String(m.photo || (Array.isArray(m.photos) && m.photos[0]) || '')
+      let priceFrom = typeof m.priceFrom === 'number' ? m.priceFrom : 0
+      let priceFromCents =
+        typeof m.priceFromCents === 'number' ? m.priceFromCents : Math.round(priceFrom * 100)
+
+      const rawVariants = Array.isArray(m.variants) ? m.variants : []
+      const variants = rawVariants.map((v, vIndex) => {
+        const vId = String(v.id || id + '-var-' + vIndex)
+        const vSku = String(v.sku || vId)
+        const vColor = String(v.color || '')
+        const vSize = String(v.size || '')
+        let vPrice = typeof v.price === 'number' ? v.price : 0
+        let vPriceCents = typeof v.priceCents === 'number' ? v.priceCents : Math.round(vPrice * 100)
+        const vStock = typeof v.stock === 'number' ? v.stock : v.stockQuantity || v.quantity || 0
+        const vAvailable = typeof v.available === 'boolean' ? v.available : vStock > 0
+        const vPhoto = String(v.photo || photo)
+
+        return {
+          id: vId,
+          sku: vSku,
+          color: vColor,
+          size: vSize,
+          price: vPrice || vPriceCents / 100,
+          price_cents: vPriceCents,
+          stock: Math.max(0, vStock),
+          available: vAvailable,
+          photo: vPhoto,
+          checkoutUrl: (function () {
+            const base = String(gestao.checkoutUrl || '')
+            if (!base) return ''
+            const sep = base.indexOf('?') !== -1 ? '&' : '?'
+            return base + sep + 'productId=' + encodeURIComponent(vId) + '&quantity=1&source=skip'
+          })(),
+        }
+      })
+
+      if (priceFromCents === 0 && variants.length > 0) {
+        const availablePrices = variants
+          .filter((v) => v.available && v.price_cents > 0)
+          .map((v) => v.price_cents)
+        if (availablePrices.length > 0) {
+          priceFromCents = Math.min.apply(null, availablePrices)
+          priceFrom = priceFromCents / 100
+        } else {
+          priceFromCents = variants[0].price_cents
+          priceFrom = variants[0].price
+        }
+      }
+
+      const colors = Array.isArray(m.colors)
+        ? m.colors.map(String)
+        : Array.from(new Set(variants.map((v) => v.color).filter(Boolean)))
+
+      const sizes = Array.isArray(m.sizes)
+        ? m.sizes.map(String)
+        : Array.from(new Set(variants.map((v) => v.size).filter(Boolean)))
+
+      return {
+        id: id,
+        name: name,
+        description: description,
+        photo: photo,
+        priceFrom: priceFrom,
+        priceFromCents: priceFromCents,
+        colors: colors,
+        sizes: sizes,
+        variants: variants,
       }
     })
 
@@ -255,6 +351,7 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
       configured: true,
       source: 'butterfly_gestao',
       products: normalized,
+      tshirtModels: normalizedTshirtModels,
       count: normalized.length,
       checkoutBaseUrl: gestao.checkoutUrl,
       metadata: metadata,

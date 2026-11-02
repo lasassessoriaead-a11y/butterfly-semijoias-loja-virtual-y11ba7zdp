@@ -17,8 +17,8 @@ const categoryImages: Record<ProductCategory, string> = {
 }
 
 export default function Index() {
-  const { products, productsLoading, productsError, refreshProducts } = useStore()
-  const featured = products.filter((product) => product.featured).slice(0, 4)
+  const { jewelryProducts, productsLoading, productsError, refreshProducts } = useStore()
+  const featured = jewelryProducts.filter((product) => product.featured).slice(0, 4)
   const categories = Object.keys(CATEGORY_LABELS) as ProductCategory[]
 
   return (
@@ -143,14 +143,56 @@ export default function Index() {
             <div className="rounded-sm bg-ivory p-12 text-center">
               <h3 className="font-serif text-2xl text-emerald-deep">Catálogo em preparação</h3>
               <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                Nenhuma peça cadastrada no momento no catálogo. Novas semijoias serão exibidas aqui
-                assim que publicadas.
+                Nenhuma semijoia cadastrada no momento no catálogo. Novas semijoias serão exibidas
+                aqui assim que publicadas.
               </p>
               <Button asChild variant="outline" className="mt-5">
                 <Link to="/sobre">Conhecer a Butterfly</Link>
               </Button>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Banner de destaque T-shirteria no Início */}
+      <section className="section-block bg-ivory border-y border-emerald-900/10">
+        <div className="site-shell grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+          <div>
+            <span className="eyebrow text-gold-deep inline-flex items-center gap-1.5">
+              <Sparkles className="size-3.5" /> Nova Seção • Pronta Entrega
+            </span>
+            <h2 className="font-serif text-3xl md:text-4xl text-emerald-deep mt-2">
+              T-shirteria Butterfly
+            </h2>
+            <p className="mt-3 font-serif text-lg text-gold-deep italic">
+              "Combine seu look com nossas t-shirts exclusivas."
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              Descubra modelos exclusivos confeccionados para harmonizar perfeitamente com o brilho
+              das suas semijoias. Estoque real com escolha de cor e tamanho e envio rápido à pronta
+              entrega.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild className="btn-gold" size="lg">
+                <Link to="/tshirteria">
+                  Ver T-shirteria <ArrowRight className="ml-2 size-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+          <div className="rounded-sm bg-white p-6 shadow-sm border border-emerald-900/10 text-center">
+            <p className="text-xs uppercase tracking-widest text-emerald-deep font-semibold">
+              Elegância & Versatilidade
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              T-shirts de corte sofisticado para compor composições casuais e elegantes com brincos,
+              colares e pulseiras da Butterfly SEMIJOIAS.
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-emerald-800 font-medium">
+              <ShieldCheck className="size-4 text-emerald-600" /> Pronta entrega oficial Butterfly
+              Gestão
+            </div>
+          </div>
         </div>
       </section>
 

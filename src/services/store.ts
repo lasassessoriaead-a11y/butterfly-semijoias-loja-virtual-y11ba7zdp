@@ -30,23 +30,40 @@ export const storeApi = {
     })
   },
 
-  async listLiveShop(): Promise<GestaoShopResponse> {
+  async listLiveShop(productType?: string): Promise<GestaoShopResponse> {
+    const query: Record<string, string> = {}
+    if (productType) {
+      query.productType = productType
+    }
     const res = await pb.send<GestaoShopResponse>('/backend/v1/butterfly/v1/gestao/shop', {
       method: 'GET',
+      query: Object.keys(query).length > 0 ? query : undefined,
     })
     return {
       ...res,
       products: Array.isArray(res.products) ? res.products.map(normalizeProduct) : [],
+      tshirtModels: Array.isArray(res.tshirtModels) ? res.tshirtModels : [],
     }
   },
 
-  async listProducts(): Promise<Product[]> {
-    const response = await storeApi.listLiveShop()
+  async listProducts(productType?: string): Promise<Product[]> {
+    const response = await storeApi.listLiveShop(productType)
     return response.products
   },
 
+  async listTshirts(): Promise<{
+    products: Product[]
+    tshirtModels: import('@/types/store').TshirtModel[]
+  }> {
+    const response = await storeApi.listLiveShop('tshirt')
+    return {
+      products: response.products || [],
+      tshirtModels: response.tshirtModels || [],
+    }
+  },
+
   buildCheckoutUrl(
-    product: Product,
+    product: Product | { id: string; sku?: string; checkoutUrl?: string },
     variation?: string,
     quantity = 1,
     gestaoCheckoutBase?: string,
@@ -57,31 +74,52 @@ export const storeApi = {
     if (!base) return ''
     try {
       const url = new URL(base, window.location.origin)
-      if (product.sku) url.searchParams.set('sku', product.sku)
       if (product.id) url.searchParams.set('productId', product.id)
+      url.searchParams.set('quantity', String(quantity > 0 ? quantity : 1))
       url.searchParams.set('source', 'skip')
       if (variation) url.searchParams.set('variation', variation)
-      if (quantity > 1) url.searchParams.set('quantity', String(quantity))
       return url.toString()
     } catch {
       const sep = base.includes('?') ? '&' : '?'
       const params = new URLSearchParams()
-      if (product.sku) params.set('sku', product.sku)
       if (product.id) params.set('productId', product.id)
+      params.set('quantity', String(quantity > 0 ? quantity : 1))
       params.set('source', 'skip')
       if (variation) params.set('variation', variation)
-      if (quantity > 1) params.set('quantity', String(quantity))
       return `${base}${sep}${params.toString()}`
     }
   },
 
   redirectToCheckout(
-    product: Product,
+    product: Product | { id: string; sku?: string; checkoutUrl?: string },
     variation?: string,
     quantity = 1,
     gestaoCheckoutBase?: string,
   ) {
     const url = storeApi.buildCheckoutUrl(product, variation, quantity, gestaoCheckoutBase)
+    if (url) {
+      window.location.href = url
+    }
+  },
+
+  buildVariantCheckoutUrl(variantId: string, quantity = 1, gestaoCheckoutBase?: string): string {
+    const DEFAULT_GESTAO_CHECKOUT =
+      'https://butterfly-semijoias-gestao.luka251083739205.chatgpt.site/checkout'
+    const base = gestaoCheckoutBase || DEFAULT_GESTAO_CHECKOUT
+    try {
+      const url = new URL(base, window.location.origin)
+      url.searchParams.set('productId', variantId)
+      url.searchParams.set('quantity', String(quantity > 0 ? quantity : 1))
+      url.searchParams.set('source', 'skip')
+      return url.toString()
+    } catch {
+      const sep = base.includes('?') ? '&' : '?'
+      return `${base}${sep}productId=${encodeURIComponent(variantId)}&quantity=${quantity}&source=skip`
+    }
+  },
+
+  redirectToVariantCheckout(variantId: string, quantity = 1, gestaoCheckoutBase?: string) {
+    const url = storeApi.buildVariantCheckoutUrl(variantId, quantity, gestaoCheckoutBase)
     if (url) {
       window.location.href = url
     }

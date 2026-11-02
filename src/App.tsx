@@ -12,6 +12,8 @@ import ContactPage from '@/pages/ContactPage'
 import AboutPage from '@/pages/AboutPage'
 import PoliciesPage from '@/pages/PoliciesPage'
 import AdminPage from '@/pages/AdminPage'
+import TshirteriaPage from '@/pages/TshirteriaPage'
+import TshirtModelDetailPage from '@/pages/TshirtModelDetailPage'
 import NotFound from '@/pages/NotFound'
 
 export default function App() {
@@ -25,6 +27,8 @@ export default function App() {
             <Route path="categoria/:category" element={<CatalogPage />} />
             <Route path="lancamentos" element={<CatalogPage mode="new" />} />
             <Route path="mais-vendidos" element={<CatalogPage mode="best" />} />
+            <Route path="tshirteria" element={<TshirteriaPage />} />
+            <Route path="tshirteria/:modelId" element={<TshirtModelDetailPage />} />
             <Route path="produto/:slug" element={<ProductPage />} />
             <Route path="carrinho" element={<CartCheckoutPage />} />
             <Route path="checkout" element={<CartCheckoutPage />} />

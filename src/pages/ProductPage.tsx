@@ -17,8 +17,8 @@ import { CATEGORY_LABELS, formatCurrency } from '@/types/store'
 
 export default function ProductPage() {
   const { slug } = useParams()
-  const { products, productsLoading, productsError, buyNow } = useStore()
-  const product = products.find((item) => item.slug === slug)
+  const { jewelryProducts, productsLoading, productsError, buyNow } = useStore()
+  const product = jewelryProducts.find((item) => item.slug === slug)
   const [variation, setVariation] = useState('')
   const [quantity, setQuantity] = useState(1)
 
@@ -41,7 +41,7 @@ export default function ProductPage() {
     )
   }
 
-  const related = products
+  const related = jewelryProducts
     .filter((item) => item.id !== product.id && item.category === product.category)
     .slice(0, 4)
 

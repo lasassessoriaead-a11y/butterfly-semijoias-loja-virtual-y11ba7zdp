@@ -1,9 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { storeApi } from '@/services/store'
-import type { CartItem, Product, UserRecord } from '@/types/store'
+import type { CartItem, Product, TshirtModel, UserRecord } from '@/types/store'
 
 interface StoreContextValue {
   products: Product[]
+  jewelryProducts: Product[]
+  tshirts: Product[]
+  tshirtModels: TshirtModel[]
   productsLoading: boolean
   productsError: string
   isGestaoConfigured: boolean
@@ -19,6 +22,7 @@ interface StoreContextValue {
   removeFromCart: (productId: string, variation: string) => void
   clearCart: () => void
   buyNow: (product: Product, variation?: string, quantity?: number) => void
+  buyVariant: (variantId: string, quantity?: number) => void
   refreshProducts: () => Promise<void>
   login: (email: string, password: string) => Promise<void>
   register: (data: {
@@ -54,12 +58,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(false)
   const [cart, setCart] = useState<CartItem[]>(loadCart)
 
+  const [tshirtModels, setTshirtModels] = useState<TshirtModel[]>([])
+
   const refreshProducts = async () => {
     setProductsLoading(true)
     setProductsError('')
     try {
       const response = await storeApi.listLiveShop()
       setProducts(response.products || [])
+      setTshirtModels(response.tshirtModels || [])
       setIsGestaoConfigured(response.configured)
       if (response.checkoutBaseUrl) {
         setCheckoutBaseUrl(response.checkoutBaseUrl)
@@ -73,6 +80,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ? (err as { message: string }).message
           : 'Não foi possível carregar o catálogo ao vivo no momento.'
       setProducts([])
+      setTshirtModels([])
       setProductsError(message)
     } finally {
       setProductsLoading(false)
@@ -148,9 +156,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const buyVariant = (variantId: string, quantity = 1) => {
+    storeApi.redirectToVariantCheckout(variantId, quantity, checkoutBaseUrl)
+  }
+
+  const jewelryProducts = useMemo(() => {
+    return products.filter((p) => !p.productType || p.productType === 'jewelry')
+  }, [products])
+
+  const tshirts = useMemo(() => {
+    return products.filter((p) => p.productType === 'tshirt')
+  }, [products])
+
   const value = useMemo<StoreContextValue>(
     () => ({
       products,
+      jewelryProducts,
+      tshirts,
+      tshirtModels,
       productsLoading,
       productsError,
       isGestaoConfigured,
@@ -166,6 +189,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       removeFromCart,
       clearCart: () => setCart([]),
       buyNow,
+      buyVariant,
       refreshProducts,
       login,
       register,
@@ -173,6 +197,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }),
     [
       products,
+      jewelryProducts,
+      tshirts,
+      tshirtModels,
       productsLoading,
       productsError,
       isGestaoConfigured,

@@ -23,6 +23,39 @@ export interface Product {
   checkoutUrl?: string
   created?: string
   updated?: string
+  productType?: 'jewelry' | 'tshirt' | string
+  availabilityMode?: string
+  modelId?: string
+  modelName?: string
+  color?: string
+  size?: string
+  photo?: string
+  price?: number
+}
+
+export interface TshirtVariant {
+  id: string
+  sku: string
+  color: string
+  size: string
+  price: number
+  price_cents: number
+  stock: number
+  available: boolean
+  photo?: string
+  checkoutUrl?: string
+}
+
+export interface TshirtModel {
+  id: string
+  name: string
+  description: string
+  photo: string
+  priceFrom: number
+  priceFromCents?: number
+  colors: string[]
+  sizes: string[]
+  variants: TshirtVariant[]
 }
 
 export interface GestaoPublicConfig {
@@ -52,6 +85,7 @@ export interface GestaoShopResponse {
   configured: boolean
   source: 'butterfly_gestao'
   products: Product[]
+  tshirtModels?: TshirtModel[]
   count: number
   checkoutBaseUrl?: string
   metadata?: Record<string, unknown>
