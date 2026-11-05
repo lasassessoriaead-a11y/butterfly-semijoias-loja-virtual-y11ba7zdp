@@ -31,6 +31,9 @@ export interface Product {
   size?: string
   photo?: string
   price?: number
+  /** Galeria própria do produto/finish (cada acabamento usa só as suas fotos). */
+  images?: string[]
+  photos?: string[]
 }
 
 export interface TshirtVariant {
@@ -42,10 +45,12 @@ export interface TshirtVariant {
   price_cents: number
   stock: number
   available: boolean
-  photo?: string
-  checkoutUrl?: string
+  photo: string
+  /** Galeria própria da variação (cada cor/finish usa só as suas fotos). */
+  images?: string[]
+  photos?: string[]
+  checkoutUrl: string
 }
-
 export interface TshirtModel {
   id: string
   name: string

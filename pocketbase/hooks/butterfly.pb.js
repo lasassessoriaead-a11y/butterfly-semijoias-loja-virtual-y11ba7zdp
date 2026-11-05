@@ -222,9 +222,10 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
         variations = ['Aro 14', 'Aro 16', 'Aro 18', 'Aro 20']
       }
 
-      const imageUrl = String(
+      let imageUrl = String(
         p.imageUrl || p.image_url || p.image || (Array.isArray(p.images) && p.images[0]) || '',
       )
+      if (typeof imageUrl !== 'string') imageUrl = ''
       const stock = typeof p.stock === 'number' ? p.stock : p.stockQuantity || p.quantity || 0
       const available = typeof p.available === 'boolean' ? p.available : stock > 0
 
@@ -235,6 +236,32 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
       const color = p.color != null ? String(p.color) : undefined
       const size = p.size != null ? String(p.size) : undefined
       const photo = p.photo != null ? String(p.photo) : undefined
+
+      // Galeria de fotos: preserva as listas `images` e `photos` do Gestão sem
+      // misturar fotos de acabamentos diferentes. `photo` singular continua como
+      // alternativa para produtos antigos com uma única foto.
+      const gallery = []
+      const pushImage = function (value) {
+        if (typeof value === 'string') {
+          const trimmed = value.trim()
+          if (trimmed && gallery.indexOf(trimmed) === -1) gallery.push(trimmed)
+        } else if (value && typeof value === 'object') {
+          const candidate = String(value.url || value.src || value.photo || value.image || '')
+          const trimmed = candidate.trim()
+          if (trimmed && gallery.indexOf(trimmed) === -1) gallery.push(trimmed)
+        }
+      }
+      if (Array.isArray(p.images)) {
+        for (let gi = 0; gi < p.images.length; gi++) pushImage(p.images[gi])
+      }
+      if (Array.isArray(p.photos)) {
+        for (let gi = 0; gi < p.photos.length; gi++) pushImage(p.photos[gi])
+      }
+      if (!gallery.length && photo) pushImage(photo)
+      if (!gallery.length && imageUrl) pushImage(imageUrl)
+      const imagesOut = gallery.slice()
+      const photosOut = gallery.slice()
+      if (!imageUrl && gallery.length) imageUrl = gallery[0]
 
       return {
         id: id,
@@ -262,6 +289,8 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
         color: color,
         size: size,
         photo: photo,
+        images: imagesOut,
+        photos: photosOut,
         price: typeof p.price === 'number' ? p.price : priceCents / 100,
         source: 'butterfly_gestao',
         checkoutUrl: (function () {
@@ -282,6 +311,31 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
       let priceFromCents =
         typeof m.priceFromCents === 'number' ? m.priceFromCents : Math.round(priceFrom * 100)
 
+      // Galeria por variante: cada cor (ex. prata vs. dourado) usa SOMENTE as
+      // próprias fotos (`images`/`photos`/`photo` da variante). Nunca fotos de
+      // outra variação. `photo` singular continua como fallback de 1 foto só.
+      const variantGallery = function (v) {
+        const list = []
+        const push = function (value) {
+          if (typeof value === 'string') {
+            const trimmed = value.trim()
+            if (trimmed && list.indexOf(trimmed) === -1) list.push(trimmed)
+          } else if (value && typeof value === 'object') {
+            const candidate = String(value.url || value.src || value.photo || value.image || '')
+            const trimmed = candidate.trim()
+            if (trimmed && list.indexOf(trimmed) === -1) list.push(trimmed)
+          }
+        }
+        if (Array.isArray(v.images)) {
+          for (let gi = 0; gi < v.images.length; gi++) push(v.images[gi])
+        }
+        if (Array.isArray(v.photos)) {
+          for (let gi = 0; gi < v.photos.length; gi++) push(v.photos[gi])
+        }
+        if (!list.length && v.photo != null && String(v.photo).trim()) push(String(v.photo))
+        return list
+      }
+
       const rawVariants = Array.isArray(m.variants) ? m.variants : []
       const variants = rawVariants.map((v, vIndex) => {
         const vId = String(v.id || id + '-var-' + vIndex)
@@ -293,6 +347,8 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
         const vStock = typeof v.stock === 'number' ? v.stock : v.stockQuantity || v.quantity || 0
         const vAvailable = typeof v.available === 'boolean' ? v.available : vStock > 0
         const vPhoto = String(v.photo || photo)
+        const vGallery = variantGallery(v)
+        if (!vGallery.length && vPhoto) vGallery.push(vPhoto)
 
         return {
           id: vId,
@@ -304,6 +360,8 @@ routerAdd('GET', '/backend/v1/butterfly/v1/gestao/shop', (e) => {
           stock: Math.max(0, vStock),
           available: vAvailable,
           photo: vPhoto,
+          images: vGallery.slice(),
+          photos: vGallery.slice(),
           checkoutUrl: (function () {
             const base = String(gestao.checkoutUrl || '')
             if (!base) return ''

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Check, ChevronRight, ShieldCheck, Sparkles, Truck, XCircle, ArrowLeft } from 'lucide-react'
 import { CenteredLoader } from '@/components/LoadingState'
+import { ProductGallery } from '@/components/ProductGallery'
+import { variantGalleryImages } from '@/lib/gallery'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useStore } from '@/contexts/StoreContext'
@@ -128,6 +130,14 @@ export default function TshirtModelDetailPage() {
     })
   }, [model, selectedColor, selectedSize])
 
+  // Galeria da variação selecionada: cada cor usa SOMENTE as próprias fotos
+  // (images/photos/photo da variante). Foto singular do modelo é o fallback
+  // para registros antigos com uma única foto.
+  const gallery = useMemo(() => {
+    const variantImages = variantGalleryImages(selectedVariant, model?.photo || '')
+    return variantImages.filter((image) => image.url)
+  }, [selectedVariant, model?.photo])
+
   // Preço e estoque da variação selecionada (nunca o total do modelo)
   const isSelectedAvailable = Boolean(
     selectedVariant && selectedVariant.available && selectedVariant.stock > 0,
@@ -160,8 +170,6 @@ export default function TshirtModelDetailPage() {
     )
   }
 
-  const activePhoto = selectedVariant?.photo || model.photo
-
   return (
     <div className="bg-white min-h-screen">
       {/* Breadcrumb */}
@@ -183,16 +191,21 @@ export default function TshirtModelDetailPage() {
       </div>
 
       <section className="site-shell grid gap-10 py-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
-        {/* Foto do modelo ou da cor selecionada */}
+        {/* Galeria: fotos da cor selecionada (images/photos/photo da variante);
+            foto singular do modelo é o fallback para registros antigos */}
         <div className="product-detail__image-wrap bg-ivory rounded-sm overflow-hidden border border-emerald-900/10">
-          <img
-            src={
-              activePhoto ||
-              'https://img.usecurling.com/p/800/900?q=tshirt%20cotton%20fashion&color=white'
-            }
-            alt={`${model.name} ${selectedColor ? `- ${selectedColor}` : ''}`}
-            className="product-detail__image object-cover w-full h-full min-h-[420px]"
-          />
+          {gallery.length > 0 ? (
+            <ProductGallery
+              images={gallery}
+              alt={`${model.name}${selectedColor ? ` - ${selectedColor}` : ''}`}
+            />
+          ) : (
+            <img
+              src="https://img.usecurling.com/p/800/900?q=tshirt%20cotton%20fashion&color=white"
+              alt={`${model.name}${selectedColor ? ` - ${selectedColor}` : ''}`}
+              className="product-detail__image object-cover w-full h-full min-h-[420px]"
+            />
+          )}
         </div>
 
         {/* Informações e seletores */}

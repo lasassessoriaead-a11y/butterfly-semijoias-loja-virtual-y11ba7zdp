@@ -4,10 +4,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useStore } from '@/contexts/StoreContext'
+import { productGalleryImages } from '@/lib/gallery'
 import { formatCurrency, type Product } from '@/types/store'
 
 export function ProductCard({ product }: { product: Product }) {
   const { buyNow } = useStore()
+  // Galeria: usa somente as fotos do próprio produto/finish (images/photos);
+  // a segunda foto aparece no hover no desktop, nunca a foto de outro acabamento.
+  const gallery = productGalleryImages(product)
+  const hoverImage = gallery.length > 1 ? gallery[1] : undefined
 
   return (
     <Card className="product-card group overflow-hidden border-0 bg-white shadow-none">
@@ -17,11 +22,20 @@ export function ProductCard({ product }: { product: Product }) {
         aria-label={`Ver ${product.name}`}
       >
         <img
-          src={product.image_url}
+          src={product.image_url || gallery[0]?.url || ''}
           alt={product.image_alt || product.name}
           className="product-card__image"
           loading="lazy"
         />
+        {hoverImage && (
+          <img
+            src={hoverImage.url}
+            alt=""
+            aria-hidden="true"
+            className="product-card__image product-card__image--hover"
+            loading="lazy"
+          />
+        )}
         <div className="product-card__badges">
           {product.is_new && <Badge className="badge-gold">Lançamento</Badge>}
           {product.best_seller && <Badge variant="secondary">Mais vendido</Badge>}

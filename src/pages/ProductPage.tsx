@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Check, ChevronRight, Minus, Plus, ShieldCheck, Sparkles, Truck } from 'lucide-react'
 import { CenteredLoader } from '@/components/LoadingState'
 import { ProductCard } from '@/components/ProductCard'
+import { ProductGallery } from '@/components/ProductGallery'
+import { productGalleryImages } from '@/lib/gallery'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,6 +23,7 @@ export default function ProductPage() {
   const product = jewelryProducts.find((item) => item.slug === slug)
   const [variation, setVariation] = useState('')
   const [quantity, setQuantity] = useState(1)
+  const gallery = useMemo(() => productGalleryImages(product), [product])
 
   useEffect(() => {
     if (product) setVariation(product.variations[0] || 'Dourado')
@@ -65,11 +68,15 @@ export default function ProductPage() {
       </div>
       <section className="site-shell grid gap-10 pb-16 lg:grid-cols-[1.08fr_0.92fr] lg:gap-20">
         <div className="product-detail__image-wrap">
-          <img
-            src={product.image_url}
-            alt={product.image_alt || product.name}
-            className="product-detail__image"
-          />
+          {gallery.length > 0 ? (
+            <ProductGallery images={gallery} alt={product.image_alt || product.name} />
+          ) : (
+            <img
+              src="https://img.usecurling.com/p/800/1000?q=jewelry%20semijewel&color=white"
+              alt={product.image_alt || product.name}
+              className="product-detail__image w-full h-full object-cover"
+            />
+          )}
         </div>
         <div className="py-2 lg:py-8">
           <div className="flex flex-wrap gap-2">
