@@ -67,7 +67,7 @@ export default function ProductPage() {
         </nav>
       </div>
       <section className="site-shell grid gap-10 pb-16 lg:grid-cols-[1.08fr_0.92fr] lg:gap-20">
-        <div className="product-detail__image-wrap">
+        <div className="bg-ivory">
           {gallery.length > 0 ? (
             <ProductGallery images={gallery} alt={product.image_alt || product.name} />
           ) : (

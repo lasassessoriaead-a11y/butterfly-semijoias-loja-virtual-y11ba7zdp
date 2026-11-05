@@ -193,7 +193,7 @@ export default function TshirtModelDetailPage() {
       <section className="site-shell grid gap-10 py-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
         {/* Galeria: fotos da cor selecionada (images/photos/photo da variante);
             foto singular do modelo é o fallback para registros antigos */}
-        <div className="product-detail__image-wrap bg-ivory rounded-sm overflow-hidden border border-emerald-900/10">
+        <div className="bg-ivory rounded-sm border border-emerald-900/10">
           {gallery.length > 0 ? (
             <ProductGallery
               images={gallery}
